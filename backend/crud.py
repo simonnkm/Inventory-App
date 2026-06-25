@@ -6,20 +6,15 @@ import models
 import schemas
 
 def create_item(db: Session, item: schemas.ItemCreate):
-    db_item = models.Item(
-        catalogue_num = item.catalogue_num,
-        item_name = item.item_name,
-        lot_num = item.lot_num,
-        quantity = item.quantity,
-        storage_id = item.storage_id,
-        expiry_date = item.expiry_date,
-        last_restocked = item.last_restocked,
-        reorder_threshold = item.reorder_threshold,
-    )
+    db_item = models.Item(**item.model_dump())
 
     db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
+    try:
+        db.commit()
+        db.refresh(db_item)
+    except Exception:
+        db.rollback()
+        raise
 
     return db_item
 
@@ -38,7 +33,7 @@ def delete_item(db: Session, item_id: int):
 
     return db_item
 
-def update_item(db: Session, item_id: int, item_data):
+def update_item(db: Session, item_id: int, item_data: schemas.ItemUpdate):
     item = get_item(db, item_id)
 
     if not item: 
@@ -66,6 +61,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(
         username = user.username,
         hashed_password = hashed,
+        role = user.role,
     )
 
     db.add(db_user)
@@ -113,10 +109,10 @@ def get_items_filtered(
         db: Session,
         name: str | None = None,
         storage_id: str | None = None,
-        expiring_before = None,
-        status: str | None = None
+        expiring_before=None,
+        status: str | None = None,
 ):
-    query = db.query(models.item)
+    query = db.query(models.Item)
 
     if name:
         query = query.filter(models.Item.item_name.ilike(f"%{name}%"))

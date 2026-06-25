@@ -14,7 +14,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",
-    "http://localhost:3000",
+    "http://127.0.0.1:5173",
 ]
 
 app.add_middleware(
@@ -107,7 +107,7 @@ def update_item(
     item_id: int,
     item_data: schemas.ItemUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(auth.get_current_user),
+    current_user = Depends(auth.require_role("admin")),
 ):
     item = crud.update_item(db, item_id, item_data)
     if item is None:
@@ -141,7 +141,7 @@ def get_items(
     )
 
 @app.get("/items/{item_id}", response_model=schemas.ItemResponse)
-def get_item(item_id: int, db: Session = Depends(get_db)):
+def get_item(item_id: int, db: Session = Depends(get_db), current_user = Depends(auth.get_current_user)):
     item = crud.get_item(db, item_id)
 
     if item is None:
@@ -150,7 +150,7 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
     return item
 
 @app.delete("/items/{item_id}", response_model=schemas.ItemResponse)
-def delete_item(item_id: int, db: Session = Depends(get_db), current_user = Depends(auth.get_current_user),):
+def delete_item(item_id: int, db: Session = Depends(get_db), current_user = Depends(auth.require_role("admin")),):
     item = crud.delete_item(db, item_id)
 
     if item is None:
@@ -166,17 +166,35 @@ def delete_item(item_id: int, db: Session = Depends(get_db), current_user = Depe
 
     return item
 
-@app.post("/register", response_model = schemas.UserResponse)
+@app.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    user_count = db.query(models.User).count()
+
+    if user_count > 0:
+        raise HTTPException(
+            status_code=403,
+            detail="Registration disabled. Ask an admin to create your account.",
+        )
+
+    user.role = "admin"
+
+    return crud.create_user(db, user)
+
+@app.post("/users/", response_model=schemas.UserResponse)
+def create_user_by_admin(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.require_role("admin")),
+):
     existing = crud.get_user(db, user.username)
 
     if existing:
         raise HTTPException(
-            status_code=400, detail="Username already exists"
+            status_code=400,
+            detail="Username already exists",
         )
-    
-    return crud.create_user(db, user)
 
+    return crud.create_user(db, user)
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -195,7 +213,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 @app.get("/audit-logs/", response_model= list[schemas.AuditLogResponse])
 def get_audit_logs(
     db: Session = Depends(get_db),
-    current_user = Depends(auth.get_current_user),
+    current_user = Depends(auth.require_role("admin")),
 ):
     return crud.get_audit_logs(db)
 
@@ -205,3 +223,7 @@ def get_low_stock_items(
     current_user = Depends(auth.get_current_user),
 ):
     return crud.get_low_stock_items(db)
+
+@app.get("/me", response_model=schemas.UserResponse)
+def read_me(current_user = Depends(auth.get_current_user)):
+    return current_user

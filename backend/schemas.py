@@ -4,13 +4,15 @@ from pydantic import BaseModel
 class UserCreate(BaseModel):
     username: str
     password: str
+    role: str = "user"
 
 class UserResponse(BaseModel):
     id: int
     username: str
+    role: str
 
     model_config = {
-        "from_attrubutes": True
+        "from_attributes": True
     }
 
 class UserLogin(BaseModel):
@@ -54,6 +56,7 @@ class ItemUpdate(BaseModel):
     storage_id: str | None = None
     expiry_date: date | None = None
     last_restocked: date | None = None
+    brand: str | None = None
     reorder_threshold: int | None = None
     critical_threshold: int | None = None
 
