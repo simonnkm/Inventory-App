@@ -32,7 +32,7 @@ def get_items_filtered(
         expiring_before=None,
         status: str | None = None,
         category: str | None = None,
-        shelf_num: str | None = None,
+        shelf_num: int | None = None,
 ):
     query = db.query(models.Item)
 
@@ -53,7 +53,7 @@ def get_items_filtered(
 
     if shelf_num:
         query = query.filter(models.Item.shelf_num == shelf_num)
-        
+
     elif status == "critical":
         query = query.filter(models.Item.quantity > 0, models.Item.quantity <= models.Item.critical_threshold)
     

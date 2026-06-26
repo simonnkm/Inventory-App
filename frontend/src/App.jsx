@@ -109,8 +109,6 @@ function App() {
 
   const isAdmin = role === "admin";
   const canUseItems = role === "admin" || role === "user";
-  const canRestockItems =
-    role === "admin";
 
   const summary = useMemo(() => {
     return items.reduce(
@@ -732,7 +730,6 @@ function App() {
                         <th>Status</th>
 
                         {canUseItems && <th>Use</th>}
-                        {isAdmin && <th>Restock</th>}
                         {isAdmin && <th>Admin</th>}
                       </tr>
                     </thead>
@@ -818,23 +815,6 @@ function App() {
 
                             {isAdmin && (
                               <td>
-                                <button
-                                  type="button"
-                                  className="small-button"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    handleRestock(item)
-                                  }
-                                >
-                                  {busy
-                                    ? "..."
-                                    : "Restock"}
-                                </button>
-                              </td>
-                            )}
-
-                            {isAdmin && (
-                              <td>
                                 <div className="admin-actions">
                                   <button
                                     type="button"
@@ -846,7 +826,14 @@ function App() {
                                   >
                                     Edit
                                   </button>
-
+                                  <button
+                                    type="button"
+                                    className="small-button"
+                                    disabled={busy}
+                                    onClick={() => handleRestock(item)}
+                                  >
+                                    Restock
+                                  </button>
                                   <button
                                     type="button"
                                     className="small-button danger-button"

@@ -15,7 +15,7 @@ function makeForm(item) {
     last_restocked:
       item?.last_restocked ?? todayString(),
     category: item?.category ?? "Uncategorized",
-    shelf_num: item?.shelf_num ?? "",
+    shelf_num: item?.shelf_num ?? 0,
     brand: item?.brand ?? "",
     reorder_threshold:
       item?.reorder_threshold ?? 5,

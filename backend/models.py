@@ -26,7 +26,7 @@ class Item(Base):
     reorder_threshold = Column(Integer, default = 5, nullable=False)
     critical_threshold = Column(Integer, default = 1, nullable=False)
     category = Column(String, nullable = False, default="Uncategorized")
-    shelf_num = Column(String, nullable=True)
+    shelf_num = Column(Integer, nullable=True)
 
 
 class AuditLog(Base):
