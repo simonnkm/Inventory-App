@@ -60,6 +60,14 @@ class ItemUpdate(BaseModel):
     reorder_threshold: int | None = None
     critical_threshold: int | None = None
 
+class DashBoardStats(BaseModel):
+    out_of_stock: int
+    critical: int
+    low_stock: int
+    expiring_soon: int
+    unique_items: int
+    total_quantity: int
+
 class AuditLogResponse(BaseModel):
     id: int
     username: str

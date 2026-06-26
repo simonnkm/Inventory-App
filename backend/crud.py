@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pwdlib import PasswordHash
 from datetime import timedelta, date
 
@@ -179,3 +180,27 @@ def restock_item(db: Session, item_id: int, amount: int):
     db.commit()
     db.refresh(item)
     return item
+
+def get_dashboard_stats(db: Session):
+    today = date.today()
+    soon = today + timedelta(days=14)
+    unique_items = db.query(models.Item).count()
+    total_quantity = (db.query(func.coalesce(func.sum(models.Item.quantity), 0)).scalar())
+    out_of_stock = db.query(models.Item).filter(models.Item.quantity <= 0).count()
+    critical = db.query(models.Item).filter(models.Item.quantity > 0,
+                                             models.Item.quantity <= models.Item.critical_threshold).count()
+    
+    low_stock = db.query(models.Item).filter(models.Item.quantity <= models.Item.reorder_threshold).count()
+    expiring_soon = db.query(models.Item).filter(models.Item.expiry_date != None,
+                                                  models.Item.expiry_date >= today,
+                                                  models.Item.expiry_date <= soon,
+                                                  ).count()
+    
+    return {
+        "unique_items": unique_items,
+        "total_quantity": total_quantity,
+        "out_of_stock": out_of_stock,
+        "critical": critical,
+        "low_stock": low_stock,
+        "expiring_soon": expiring_soon,
+    }

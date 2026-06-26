@@ -15,6 +15,8 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://10.3.20.141:5173",
+    "http://172.23.186.98:5173",
 ]
 
 app.add_middleware(
@@ -230,3 +232,10 @@ def get_low_stock_items(
 @app.get("/me", response_model=schemas.UserResponse)
 def read_me(current_user = Depends(auth.get_current_user)):
     return current_user
+
+@app.get("/dashboard", response_model=schemas.DashBoardStats)
+def dashboard(
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.get_current_user),
+):
+    return crud.get_dashboard_stats(db)
