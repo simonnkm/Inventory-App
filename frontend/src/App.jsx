@@ -26,7 +26,7 @@ function getItemId(item) {
   return item.id ?? item.catalogue_num;
 }
 
-function itemStatus(item) {
+function getItemStatus(item) {
   const criticalThreshold = item.critical_threshold ?? 1;
   const reorderThreshold = item.reorder_threshold ?? 5;
 
@@ -90,28 +90,34 @@ function App() {
 
   const [activeView, setActiveView] = useState("inventory");
 
-  const [userModalOpen, setUserModalOpen] = useState(false);
-  const [creatingUser, setCreatingUser] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
+  const [userModalOpen, setUserModalOpen] = useState(false);
+
   const [restoring, setRestoring] = useState(Boolean(token));
-  const [loading, setLoading] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [loadingItems, setLoadingItems] = useState(false);
   const [loadingAudit, setLoadingAudit] = useState(false);
   const [savingItem, setSavingItem] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
   const [busyItemId, setBusyItemId] = useState(null);
 
   const [error, setError] = useState("");
 
-  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const role = user?.role?.toLowerCase() ?? "";
+
+  const isAdmin = role === "admin";
+  const canUseItems = role === "admin" || role === "user";
+  const canRestockItems =
+    role === "admin" || role === "restocker";
 
   const summary = useMemo(() => {
     return items.reduce(
       (result, item) => {
         result.total += 1;
 
-        const status = itemStatus(item).text;
+        const status = getItemStatus(item).text;
 
         if (status === "Low stock") {
           result.low += 1;
@@ -135,7 +141,7 @@ function App() {
   useEffect(() => {
     if (!token) {
       setRestoring(false);
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -157,13 +163,16 @@ function App() {
         setUser(currentUser);
         setItems(inventory);
       } catch (err) {
-        if (!cancelled) {
-          localStorage.removeItem("access_token");
-          setToken("");
-          setUser(null);
-          setItems([]);
-          setError(err.message);
+        if (cancelled) {
+          return;
         }
+
+        localStorage.removeItem("access_token");
+
+        setToken("");
+        setUser(null);
+        setItems([]);
+        setError(err.message);
       } finally {
         if (!cancelled) {
           setRestoring(false);
@@ -178,17 +187,42 @@ function App() {
     };
   }, [token]);
 
-  async function refreshItems(selectedFilters = filters) {
+  function restoreScroll(scrollPosition) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: scrollPosition,
+          left: 0,
+          behavior: "auto",
+        });
+      });
+    });
+  }
+
+  async function refreshItems(
+    selectedFilters = filters,
+    preserveScroll = true,
+  ) {
+    const scrollPosition = window.scrollY;
+
     setLoadingItems(true);
     setError("");
 
     try {
-      const inventory = await getItems(token, selectedFilters);
+      const inventory = await getItems(
+        token,
+        selectedFilters,
+      );
+
       setItems(inventory);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoadingItems(false);
+
+      if (preserveScroll) {
+        restoreScroll(scrollPosition);
+      }
     }
   }
 
@@ -209,7 +243,7 @@ function App() {
   async function handleLogin(event) {
     event.preventDefault();
 
-    setLoading(true);
+    setLoggingIn(true);
     setError("");
 
     try {
@@ -223,7 +257,7 @@ function App() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setLoggingIn(false);
     }
   }
 
@@ -234,15 +268,21 @@ function App() {
     setUser(null);
     setItems([]);
     setAuditLogs([]);
+
     setUsername("");
     setPassword("");
+
     setFilters(EMPTY_FILTERS);
     setAmounts({});
+
     setActiveView("inventory");
-    setModalOpen(false);
+
+    setItemModalOpen(false);
     setEditingItem(null);
-    setError("");
     setUserModalOpen(false);
+
+    setBusyItemId(null);
+    setError("");
   }
 
   function updateFilter(event) {
@@ -256,25 +296,31 @@ function App() {
 
   async function handleFilterSubmit(event) {
     event.preventDefault();
-    await refreshItems(filters);
+
+    await refreshItems(filters, true);
   }
 
   async function clearFilters() {
     setFilters(EMPTY_FILTERS);
-    await refreshItems(EMPTY_FILTERS);
+
+    await refreshItems(EMPTY_FILTERS, true);
   }
 
   async function handleUse(item) {
     const itemId = getItemId(item);
-    const amount = Number(amounts[itemId] || 1);
+    const amount = Number(amounts[itemId] ?? 1);
 
     if (!Number.isInteger(amount) || amount < 1) {
-      setError("Use amount must be a positive whole number.");
+      setError(
+        "Use amount must be a positive whole number.",
+      );
       return;
     }
 
     if (amount > item.quantity) {
-      setError(`Only ${item.quantity} units are available.`);
+      setError(
+        `Only ${item.quantity} units are available.`,
+      );
       return;
     }
 
@@ -289,36 +335,13 @@ function App() {
         [itemId]: 1,
       }));
 
-      await refreshItems();
+      await refreshItems(filters, true);
     } catch (err) {
       setError(err.message);
     } finally {
       setBusyItemId(null);
     }
   }
-
-  async function handleCreateUser(payload) {
-  setCreatingUser(true);
-  setError("");
-
-  try {
-    const createdUser = await createUser(token, payload);
-
-    setUserModalOpen(false);
-
-    window.alert(
-      `Created ${createdUser.role} account: ${createdUser.username}`,
-    );
-
-    if (activeView === "audit") {
-      await loadAuditLogs();
-    }
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setCreatingUser(false);
-  }
-}
 
   async function handleRestock(item) {
     const itemId = getItemId(item);
@@ -335,7 +358,9 @@ function App() {
     const amount = Number(input);
 
     if (!Number.isInteger(amount) || amount < 1) {
-      setError("Restock amount must be a positive whole number.");
+      setError(
+        "Restock amount must be a positive whole number.",
+      );
       return;
     }
 
@@ -344,7 +369,7 @@ function App() {
 
     try {
       await restockItem(token, itemId, amount);
-      await refreshItems();
+      await refreshItems(filters, true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -368,7 +393,7 @@ function App() {
 
     try {
       await deleteItem(token, itemId);
-      await refreshItems();
+      await refreshItems(filters, true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -391,10 +416,10 @@ function App() {
         await createItem(token, payload);
       }
 
-      setModalOpen(false);
+      setItemModalOpen(false);
       setEditingItem(null);
 
-      await refreshItems();
+      await refreshItems(filters, true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -402,16 +427,44 @@ function App() {
     }
   }
 
+  async function handleCreateUser(payload) {
+    setCreatingUser(true);
+    setError("");
+
+    try {
+      const createdUser = await createUser(token, payload);
+
+      setUserModalOpen(false);
+
+      window.alert(
+        `Created ${createdUser.role} account: ${createdUser.username}`,
+      );
+
+      if (activeView === "audit") {
+        await loadAuditLogs();
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreatingUser(false);
+    }
+  }
+
   function openNewItemModal() {
     setEditingItem(null);
     setError("");
-    setModalOpen(true);
+    setItemModalOpen(true);
   }
 
   function openEditModal(item) {
     setEditingItem(item);
     setError("");
-    setModalOpen(true);
+    setItemModalOpen(true);
+  }
+
+  function openCreateUserModal() {
+    setError("");
+    setUserModalOpen(true);
   }
 
   async function openAuditLog() {
@@ -474,10 +527,11 @@ function App() {
           )}
 
           <button
+            type="submit"
             className="primary-button"
-            disabled={loading}
+            disabled={loggingIn}
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loggingIn ? "Signing in..." : "Sign in"}
           </button>
         </form>
       </main>
@@ -610,10 +664,11 @@ function App() {
                 />
 
                 <button
+                  type="submit"
                   className="primary-button"
                   disabled={loadingItems}
                 >
-                  Filter
+                  {loadingItems ? "Filtering..." : "Filter"}
                 </button>
 
                 <button
@@ -631,10 +686,7 @@ function App() {
                   <button
                     type="button"
                     className="secondary-button"
-                    onClick={() => {
-                      setError("");
-                      setUserModalOpen(true);
-                    }}
+                    onClick={openCreateUserModal}
                   >
                     Create user
                   </button>
@@ -651,13 +703,17 @@ function App() {
             </section>
 
             <section className="table-card">
-              {loadingItems ? (
-                <p className="empty-message">
-                  Loading inventory...
+              {loadingItems && items.length > 0 && (
+                <p className="table-update-message">
+                  Updating inventory...
                 </p>
-              ) : items.length === 0 ? (
+              )}
+
+              {items.length === 0 ? (
                 <p className="empty-message">
-                  No inventory items found.
+                  {loadingItems
+                    ? "Loading inventory..."
+                    : "No inventory items found."}
                 </p>
               ) : (
                 <div className="table-wrapper">
@@ -671,7 +727,12 @@ function App() {
                         <th>Quantity</th>
                         <th>Expiry</th>
                         <th>Status</th>
-                        <th>Use</th>
+
+                        {canUseItems && <th>Use</th>}
+
+                        {canRestockItems && (
+                          <th>Restock</th>
+                        )}
 
                         {isAdmin && <th>Admin</th>}
                       </tr>
@@ -680,8 +741,11 @@ function App() {
                     <tbody>
                       {items.map((item) => {
                         const itemId = getItemId(item);
-                        const status = itemStatus(item);
-                        const busy = busyItemId === itemId;
+                        const status =
+                          getItemStatus(item);
+
+                        const busy =
+                          busyItemId === itemId;
 
                         return (
                           <tr key={itemId}>
@@ -727,60 +791,68 @@ function App() {
                               </span>
                             </td>
 
-                            <td>
-                              <div className="use-controls">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  max={item.quantity}
-                                  value={
-                                    amounts[itemId] ?? 1
-                                  }
-                                  disabled={
-                                    busy ||
-                                    item.quantity <= 0
-                                  }
-                                  onChange={(event) =>
-                                    setAmounts(
-                                      (current) => ({
-                                        ...current,
-                                        [itemId]:
-                                          event.target.value,
-                                      }),
-                                    )
-                                  }
-                                />
+                            {canUseItems && (
+                              <td>
+                                <div className="use-controls">
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max={item.quantity}
+                                    value={
+                                      amounts[itemId] ?? 1
+                                    }
+                                    disabled={
+                                      busy ||
+                                      item.quantity <= 0
+                                    }
+                                    onChange={(event) =>
+                                      setAmounts(
+                                        (current) => ({
+                                          ...current,
+                                          [itemId]:
+                                            event.target.value,
+                                        }),
+                                      )
+                                    }
+                                  />
 
+                                  <button
+                                    type="button"
+                                    className="use-button"
+                                    disabled={
+                                      busy ||
+                                      item.quantity <= 0
+                                    }
+                                    onClick={() =>
+                                      handleUse(item)
+                                    }
+                                  >
+                                    {busy ? "..." : "Use"}
+                                  </button>
+                                </div>
+                              </td>
+                            )}
+
+                            {canRestockItems && (
+                              <td>
                                 <button
                                   type="button"
-                                  className="use-button"
-                                  disabled={
-                                    busy ||
-                                    item.quantity <= 0
-                                  }
+                                  className="small-button"
+                                  disabled={busy}
                                   onClick={() =>
-                                    handleUse(item)
+                                    handleRestock(item)
                                   }
                                 >
-                                  {busy ? "..." : "Use"}
+                                  {busy
+                                    ? "..."
+                                    : "Restock"}
                                 </button>
-                              </div>
-                            </td>
+                              </td>
+                            )}
 
                             {isAdmin && (
                               <td>
                                 <div className="admin-actions">
-                                  <button
-                                    type="button"
-                                    className="small-button"
-                                    disabled={busy}
-                                    onClick={() =>
-                                      handleRestock(item)
-                                    }
-                                  >
-                                    Restock
-                                  </button>
-
                                   <button
                                     type="button"
                                     className="small-button"
@@ -821,7 +893,8 @@ function App() {
                 <h2>Audit log</h2>
 
                 <p>
-                  Inventory actions recorded by the backend.
+                  Inventory actions recorded by the
+                  backend.
                 </p>
               </div>
 
@@ -831,17 +904,17 @@ function App() {
                 onClick={loadAuditLogs}
                 disabled={loadingAudit}
               >
-                {loadingAudit ? "Loading..." : "Refresh"}
+                {loadingAudit
+                  ? "Loading..."
+                  : "Refresh"}
               </button>
             </div>
 
-            {loadingAudit ? (
+            {auditLogs.length === 0 ? (
               <p className="empty-message">
-                Loading audit log...
-              </p>
-            ) : auditLogs.length === 0 ? (
-              <p className="empty-message">
-                No audit entries found.
+                {loadingAudit
+                  ? "Loading audit log..."
+                  : "No audit entries found."}
               </p>
             ) : (
               <div className="table-wrapper">
@@ -870,7 +943,9 @@ function App() {
                         </td>
 
                         <td>
-                          <code>{log.action}</code>
+                          <code>
+                            {log.action}
+                          </code>
                         </td>
 
                         <td>
@@ -891,30 +966,30 @@ function App() {
       </main>
 
       <ItemModal
-        open={modalOpen}
+        open={itemModalOpen}
         item={editingItem}
         loading={savingItem}
         onClose={() => {
           if (!savingItem) {
-            setModalOpen(false);
+            setItemModalOpen(false);
             setEditingItem(null);
           }
         }}
         onSubmit={handleSaveItem}
       />
+
       <UserModal
-      open={userModalOpen}
-      loading={creatingUser}
-      onClose={() => {
-        if (!creatingUser) {
-          setUserModalOpen(false);
-        }
-      }}
-      onSubmit={handleCreateUser}
+        open={userModalOpen}
+        loading={creatingUser}
+        onClose={() => {
+          if (!creatingUser) {
+            setUserModalOpen(false);
+          }
+        }}
+        onSubmit={handleCreateUser}
       />
     </div>
   );
 }
 
 export default App;
-

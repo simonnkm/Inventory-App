@@ -376,3 +376,24 @@ select:focus {
     flex-direction: column;
   }
 }
+
+.table-card {
+  position: relative;
+}
+
+.table-loading-banner {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 8px 16px;
+  border-bottom: 1px solid #dde3ea;
+  background: #fff8dc;
+  color: #705500;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.table-card-loading .table-wrapper {
+  opacity: 0.65;
+  pointer-events: none;
+}
