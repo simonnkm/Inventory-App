@@ -241,3 +241,34 @@ def dashboard(
     current_user = Depends(auth.get_current_user),
 ):
     return crud.get_dashboard_stats(db)
+
+@app.post("/items/{item_id}/transactions", response_model=schemas.ItemResponse)
+def create_item_transaction(
+    item_id: int,
+    transaction: schemas.ItemTransactionCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.get_current_user),
+):
+    if transaction.type == "use":
+        if current_user.role not in ["admin", "user"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    elif transaction.type == "restock":
+        if current_user.role not in ["admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    else:
+        raise HTTPException(status_code=400, detail="Invalid transaction type")
+    
+    item = crud.apply_item_transaction(
+        db, item_id, transaction, current_user.username,
+    )
+
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    if item == "invalid amount":
+        raise HTTPException(status_code=400, detail="Amount must be greater than 0")
+    
+    if item == "not enough quantity":
+        raise HTTPException(status_code=400, detail="Not enough quantity")
+    
+    return item

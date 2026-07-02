@@ -68,6 +68,11 @@ class ItemUpdate(BaseModel):
     category: str | None = None
     shelf_num: int | None = None
 
+class ItemTransactionCreate(BaseModel):
+    type: str
+    amount: int
+    reason: str | None = None
+
 class DashBoardStats(BaseModel):
     out_of_stock: int
     critical: int
@@ -83,6 +88,9 @@ class AuditLogResponse(BaseModel):
     item_id: int | None
     details: str | None
     timestamp: datetime
+    old_quantity: int | None
+    change_amount: int | None
+    new_quantity: int | None
     model_config = {
         "from_attributes": True
     }

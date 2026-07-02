@@ -110,27 +110,13 @@ export function deleteItem(token, itemId) {
   });
 }
 
-export function useItem(token, itemId, amount) {
+export function createTransaction(token, itemId, changeAmount) {
   const query = new URLSearchParams({
-    amount: String(amount),
+    change_amount: String(changeAmount),
   });
 
   return apiRequest(
-    `/items/${itemId}/use?${query.toString()}`,
-    {
-      token,
-      method: "POST",
-    },
-  );
-}
-
-export function restockItem(token, itemId, amount) {
-  const query = new URLSearchParams({
-    amount: String(amount),
-  });
-
-  return apiRequest(
-    `/items/${itemId}/restock?${query.toString()}`,
+    `/items/${itemId}/transaction?${query.toString()}`,
     {
       token,
       method: "POST",

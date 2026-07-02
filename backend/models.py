@@ -37,3 +37,6 @@ class AuditLog(Base):
     item_id = Column(Integer, ForeignKey("items.id"), nullable= True)
     details = Column(String, nullable = True)
     timestamp = Column(DateTime, default = lambda: datetime.now(timezone.utc), nullable=False)
+    old_quantity = Column(Integer, nullable=True)
+    change_amount = Column(Integer, nullable=True)
+    new_quantity = Column(Integer, nullable=True)

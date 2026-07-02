@@ -140,12 +140,18 @@ def create_audit_log(
         action: str,
         item_id: int | None = None,
         details: str | None = None,
+        old_quantity: int | None = None,
+        change_amount: int | None = None,
+        new_quantity: int | None = None,
 ):
     log = models.AuditLog(
         username = username,
         action = action,
         item_id = item_id,
         details = details,
+        old_quantity=old_quantity,
+        change_amount=change_amount,
+        new_quantity=new_quantity,
     )
     db.add(log)
     db.commit()
@@ -188,6 +194,42 @@ def restock_item(db: Session, item_id: int, amount: int):
     item.quantity += amount
     db.commit()
     db.refresh(item)
+    return item
+
+def apply_item_transaction(db, item_id, transaction, username):
+    item = get_item(db, item_id)
+
+    if item is None:
+        return None
+    if transaction.amount <= 0:
+        return "invalid amount"
+    old_quantity = item.quantity
+
+    if transaction.type == "use":
+        if item.quantity < transaction.amount:
+            return "not enough quantity"
+        item.quantity -= transaction.amount
+        change_amount = -transaction.amount
+        action = "USE_ITEM"
+
+    elif transaction.type == "restock":
+        item.quantity += transaction.amount
+        change_amount = transaction.amount
+        action = "RESTOCK_ITEM"
+
+    else:
+        return "invalid type"
+    
+    new_quantity = item.quantity
+
+    db.commit()
+    db.refresh(item)
+
+    create_audit_log(
+        db, username=username,action=action,item_id=item_id,
+        details=f"{action}: {transaction.amount} of {item.item_name}. Reason: {transaction.reason}",
+        old_quantity=old_quantity, change_amount=change_amount, new_quantity=new_quantity,
+    )
     return item
 
 def get_dashboard_stats(db: Session):

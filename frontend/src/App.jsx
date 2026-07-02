@@ -2,14 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   createItem,
   createUser,
+  createTransaction,
   deleteItem,
   getAuditLogs,
   getCurrentUser,
   getItems,
   login,
-  restockItem,
   updateItem,
-  useItem,
 } from "./api";
 import ItemModal from "./ItemModal";
 import UserModal from "./UserModal";
@@ -73,6 +72,14 @@ function formatTimestamp(value) {
   return new Date(value).toLocaleString();
 }
 
+function formatChangeAmount(value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
+  return value > 0 ? `+${value}` : value;
+}
+
 function App() {
   const [token, setToken] = useState(
     () => localStorage.getItem("access_token") || "",
@@ -106,9 +113,8 @@ function App() {
   const [error, setError] = useState("");
 
   const role = user?.role?.toLowerCase() ?? "";
-
   const isAdmin = role === "admin";
-  const canUseItems = role === "admin" || role === "user";
+  const canTransact = role === "admin" || role === "user";
 
   const summary = useMemo(() => {
     return items.reduce(
@@ -197,21 +203,14 @@ function App() {
     });
   }
 
-  async function refreshItems(
-    selectedFilters = filters,
-    preserveScroll = true,
-  ) {
+  async function refreshItems(selectedFilters = filters, preserveScroll = true) {
     const scrollPosition = window.scrollY;
 
     setLoadingItems(true);
     setError("");
 
     try {
-      const inventory = await getItems(
-        token,
-        selectedFilters,
-      );
-
+      const inventory = await getItems(token, selectedFilters);
       setItems(inventory);
     } catch (err) {
       setError(err.message);
@@ -294,31 +293,27 @@ function App() {
 
   async function handleFilterSubmit(event) {
     event.preventDefault();
-
     await refreshItems(filters, true);
   }
 
   async function clearFilters() {
     setFilters(EMPTY_FILTERS);
-
     await refreshItems(EMPTY_FILTERS, true);
   }
 
-  async function handleUse(item) {
+  async function handleTransaction(item, direction) {
     const itemId = getItemId(item);
-    const amount = Number(amounts[itemId] ?? 1);
+    const rawAmount = Number(amounts[itemId] ?? 1);
 
-    if (!Number.isInteger(amount) || amount < 1) {
-      setError(
-        "Use amount must be a positive whole number.",
-      );
+    if (!Number.isInteger(rawAmount) || rawAmount < 1) {
+      setError("Amount must be a positive whole number.");
       return;
     }
 
-    if (amount > item.quantity) {
-      setError(
-        `Only ${item.quantity} units are available.`,
-      );
+    const changeAmount = direction === "increase" ? rawAmount : -rawAmount;
+
+    if (item.quantity + changeAmount < 0) {
+      setError(`Only ${item.quantity} units are available.`);
       return;
     }
 
@@ -326,47 +321,13 @@ function App() {
     setError("");
 
     try {
-      await useItem(token, itemId, amount);
+      await createTransaction(token, itemId, changeAmount);
 
       setAmounts((current) => ({
         ...current,
         [itemId]: 1,
       }));
 
-      await refreshItems(filters, true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusyItemId(null);
-    }
-  }
-
-  async function handleRestock(item) {
-    const itemId = getItemId(item);
-
-    const input = window.prompt(
-      `How many units of ${item.item_name} should be added?`,
-      "10",
-    );
-
-    if (input === null) {
-      return;
-    }
-
-    const amount = Number(input);
-
-    if (!Number.isInteger(amount) || amount < 1) {
-      setError(
-        "Restock amount must be a positive whole number.",
-      );
-      return;
-    }
-
-    setBusyItemId(itemId);
-    setError("");
-
-    try {
-      await restockItem(token, itemId, amount);
       await refreshItems(filters, true);
     } catch (err) {
       setError(err.message);
@@ -405,11 +366,7 @@ function App() {
 
     try {
       if (editingItem) {
-        await updateItem(
-          token,
-          getItemId(editingItem),
-          payload,
-        );
+        await updateItem(token, getItemId(editingItem), payload);
       } else {
         await createItem(token, payload);
       }
@@ -481,25 +438,18 @@ function App() {
   if (!user) {
     return (
       <main className="login-page">
-        <form
-          className="login-card"
-          onSubmit={handleLogin}
-        >
+        <form className="login-card" onSubmit={handleLogin}>
           <div className="brand-mark">1C</div>
 
           <h1>Lab Inventory</h1>
 
-          <p className="muted">
-            Sign in to manage laboratory supplies.
-          </p>
+          <p className="muted">Sign in to manage laboratory supplies.</p>
 
           <label>
             Username
             <input
               value={username}
-              onChange={(event) =>
-                setUsername(event.target.value)
-              }
+              onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
               required
             />
@@ -510,19 +460,13 @@ function App() {
             <input
               type="password"
               value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
+              onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               required
             />
           </label>
 
-          {error && (
-            <p className="error-message">
-              {error}
-            </p>
-          )}
+          {error && <p className="error-message">{error}</p>}
 
           <button
             type="submit"
@@ -543,12 +487,8 @@ function App() {
           <h1>Lab Inventory</h1>
 
           <p>
-            Signed in as{" "}
-            <strong>{user.username}</strong>
-
-            <span className="role">
-              {user.role}
-            </span>
+            Signed in as <strong>{user.username}</strong>
+            <span className="role">{user.role}</span>
           </p>
         </div>
 
@@ -557,13 +497,9 @@ function App() {
             <button
               type="button"
               className={
-                activeView === "inventory"
-                  ? "nav-tab active"
-                  : "nav-tab"
+                activeView === "inventory" ? "nav-tab active" : "nav-tab"
               }
-              onClick={() =>
-                setActiveView("inventory")
-              }
+              onClick={() => setActiveView("inventory")}
             >
               Inventory
             </button>
@@ -572,9 +508,7 @@ function App() {
               <button
                 type="button"
                 className={
-                  activeView === "audit"
-                    ? "nav-tab active"
-                    : "nav-tab"
+                  activeView === "audit" ? "nav-tab active" : "nav-tab"
                 }
                 onClick={openAuditLog}
               >
@@ -594,11 +528,7 @@ function App() {
       </header>
 
       <main className="content">
-        {error && (
-          <p className="error-message page-error">
-            {error}
-          </p>
-        )}
+        {error && <p className="error-message page-error">{error}</p>}
 
         {activeView === "inventory" ? (
           <>
@@ -625,10 +555,7 @@ function App() {
             </section>
 
             <section className="toolbar inventory-toolbar">
-              <form
-                className="filter-form"
-                onSubmit={handleFilterSubmit}
-              >
+              <form className="filter-form" onSubmit={handleFilterSubmit}>
                 <input
                   name="name"
                   type="search"
@@ -702,9 +629,7 @@ function App() {
 
             <section className="table-card">
               {loadingItems && items.length > 0 && (
-                <p className="table-update-message">
-                  Updating inventory...
-                </p>
+                <p className="table-update-message">Updating inventory...</p>
               )}
 
               {items.length === 0 ? (
@@ -729,7 +654,7 @@ function App() {
                         <th>Expiry</th>
                         <th>Status</th>
 
-                        {canUseItems && <th>Use</th>}
+                        {canTransact && <th>Transaction</th>}
                         {isAdmin && <th>Admin</th>}
                       </tr>
                     </thead>
@@ -737,11 +662,8 @@ function App() {
                     <tbody>
                       {items.map((item) => {
                         const itemId = getItemId(item);
-                        const status =
-                          getItemStatus(item);
-
-                        const busy =
-                          busyItemId === itemId;
+                        const status = getItemStatus(item);
+                        const busy = busyItemId === itemId;
 
                         return (
                           <tr key={itemId}>
@@ -750,19 +672,12 @@ function App() {
                             </td>
 
                             <td>{item.brand || "—"}</td>
-
                             <td>{item.category || "Uncategorized"}</td>
-
                             <td>{item.catalogue_num}</td>
-
                             <td>{item.lot_num ?? "—"}</td>
-
                             <td>{item.storage_id}</td>
-
                             <td>{item.shelf_num ?? "—"}</td>
-
                             <td>{item.quantity}</td>
-
                             <td>{formatDate(item.expiry_date)}</td>
 
                             <td>
@@ -771,44 +686,45 @@ function App() {
                               </span>
                             </td>
 
-                            {canUseItems && (
+                            {canTransact && (
                               <td>
                                 <div className="use-controls">
                                   <input
                                     type="number"
                                     min="1"
-                                    max={item.quantity}
-                                    value={
-                                      amounts[itemId] ?? 1
-                                    }
-                                    disabled={
-                                      busy ||
-                                      item.quantity <= 0
-                                    }
+                                    value={amounts[itemId] ?? 1}
+                                    disabled={busy}
                                     onChange={(event) =>
-                                      setAmounts(
-                                        (current) => ({
-                                          ...current,
-                                          [itemId]:
-                                            event.target.value,
-                                        }),
-                                      )
+                                      setAmounts((current) => ({
+                                        ...current,
+                                        [itemId]: event.target.value,
+                                      }))
                                     }
                                   />
 
                                   <button
                                     type="button"
                                     className="use-button"
-                                    disabled={
-                                      busy ||
-                                      item.quantity <= 0
-                                    }
+                                    disabled={busy || item.quantity <= 0}
                                     onClick={() =>
-                                      handleUse(item)
+                                      handleTransaction(item, "decrease")
                                     }
                                   >
-                                    {busy ? "..." : "Use"}
+                                    {busy ? "..." : "Remove"}
                                   </button>
+
+                                  {isAdmin && (
+                                    <button
+                                      type="button"
+                                      className="small-button"
+                                      disabled={busy}
+                                      onClick={() =>
+                                        handleTransaction(item, "increase")
+                                      }
+                                    >
+                                      {busy ? "..." : "Add"}
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             )}
@@ -820,27 +736,16 @@ function App() {
                                     type="button"
                                     className="small-button"
                                     disabled={busy}
-                                    onClick={() =>
-                                      openEditModal(item)
-                                    }
+                                    onClick={() => openEditModal(item)}
                                   >
                                     Edit
                                   </button>
-                                  <button
-                                    type="button"
-                                    className="small-button"
-                                    disabled={busy}
-                                    onClick={() => handleRestock(item)}
-                                  >
-                                    Restock
-                                  </button>
+
                                   <button
                                     type="button"
                                     className="small-button danger-button"
                                     disabled={busy}
-                                    onClick={() =>
-                                      handleDelete(item)
-                                    }
+                                    onClick={() => handleDelete(item)}
                                   >
                                     Delete
                                   </button>
@@ -861,11 +766,7 @@ function App() {
             <div className="section-heading">
               <div>
                 <h2>Audit log</h2>
-
-                <p>
-                  Inventory actions recorded by the
-                  backend.
-                </p>
+                <p>Inventory actions recorded by the backend.</p>
               </div>
 
               <button
@@ -874,9 +775,7 @@ function App() {
                 onClick={loadAuditLogs}
                 disabled={loadingAudit}
               >
-                {loadingAudit
-                  ? "Loading..."
-                  : "Refresh"}
+                {loadingAudit ? "Loading..." : "Refresh"}
               </button>
             </div>
 
@@ -895,6 +794,9 @@ function App() {
                       <th>User</th>
                       <th>Action</th>
                       <th>Item ID</th>
+                      <th>Old Qty</th>
+                      <th>Change</th>
+                      <th>New Qty</th>
                       <th>Details</th>
                     </tr>
                   </thead>
@@ -902,29 +804,16 @@ function App() {
                   <tbody>
                     {auditLogs.map((log) => (
                       <tr key={log.id}>
+                        <td>{formatTimestamp(log.timestamp)}</td>
+                        <td>{log.username}</td>
                         <td>
-                          {formatTimestamp(
-                            log.timestamp,
-                          )}
+                          <code>{log.action}</code>
                         </td>
-
-                        <td>
-                          {log.username}
-                        </td>
-
-                        <td>
-                          <code>
-                            {log.action}
-                          </code>
-                        </td>
-
-                        <td>
-                          {log.item_id ?? "—"}
-                        </td>
-
-                        <td>
-                          {log.details ?? "—"}
-                        </td>
+                        <td>{log.item_id ?? "—"}</td>
+                        <td>{log.old_quantity ?? "—"}</td>
+                        <td>{formatChangeAmount(log.change_amount)}</td>
+                        <td>{log.new_quantity ?? "—"}</td>
+                        <td>{log.details ?? "—"}</td>
                       </tr>
                     ))}
                   </tbody>
