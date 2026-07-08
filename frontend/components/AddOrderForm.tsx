@@ -4,7 +4,6 @@ import { FormEvent, useMemo, useState } from "react";
 import {
   ITEM_TYPES,
   todayInputValue,
-  toDisplayDate,
   type Order,
 } from "@/types/inventory";
 
@@ -69,16 +68,16 @@ export default function AddOrderForm({
 
     onSubmitOrder({
       id: Date.now(),
-      dateOrdered: toDisplayDate(form.dateOrdered),
-      itemName: form.itemType,
+      dateOrdered: form.dateOrdered,
+      itemName: form.itemName || form.itemType,
       supplier: form.supplier,
       totalPrice: form.totalPrice,
       pricePerUnit: form.pricePerUnit,
       catalogueNum: form.catalog,
       unitsOrdered: form.unitsOrdered,
-      expiryDate: toDisplayDate(form.expiryDate),
+      expiryDate: form.expiryDate,
       delivered,
-      dateDelivered: delivered ? toDisplayDate(form.dateDelivered) : "",
+      dateDelivered: delivered ? form.dateDelivered : undefined,
     });
   }
 

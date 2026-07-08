@@ -14,7 +14,7 @@ type InventoryTableProps = {
   isAdmin: boolean;
   onAddItem: () => void;
   onEditItem: (item: InventoryItem) => void;
-  onDeleteItem: (itemId: number) => void;
+  onDeleteItem: (itemId: string) => void;
   onQuantityChange: (item: InventoryItem, nextQuantity: number) => void;
 };
 
@@ -39,7 +39,11 @@ export default function InventoryTable({
 }: InventoryTableProps) {
   const [filter, setFilter] = useState<Status | "everything">("everything");
   const [search, setSearch] = useState("");
+  const [inventorySort, setInventorySort] = useState<
+    "default" | "recently-used" | "quantity-low" | "quantity-high"
+  >("default");
 
+  
   const visibleItems = useMemo(() => {
     return items.filter((item) => {
       const matchesFilter = filter === "everything" || item.status === filter;

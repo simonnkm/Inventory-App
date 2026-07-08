@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pwdlib import PasswordHash
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime, timezone
 
 import models
 import schemas
@@ -220,6 +220,7 @@ def apply_item_transaction(db, item_id, transaction, username):
     else:
         return "invalid type"
     
+    item.last_used_at = datetime.now(timezone.utc)
     new_quantity = item.quantity
 
     db.commit()
@@ -255,3 +256,91 @@ def get_dashboard_stats(db: Session):
         "low_stock": low_stock,
         "expiring_soon": expiring_soon,
     }
+
+def get_users(db: Session):
+    return db.query(models.User).order_by(models.User.id.asc()).all()
+
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+
+def delete_user(db: Session, user_id: int):
+    user = get_user_by_id(db, user_id)
+
+    if user is None:
+        return None
+
+    db.delete(user)
+    db.commit()
+
+    return user
+
+def get_orders(db: Session):
+    return db.query(models.Order).order_by(models.Order.id.desc()).all()
+
+
+def get_orders_by_ids(db: Session, order_ids: list[int]):
+    return (
+        db.query(models.Order)
+        .filter(models.Order.id.in_(order_ids))
+        .order_by(models.Order.id.desc())
+        .all()
+    )
+
+
+def create_order(db: Session, order: schemas.OrderCreate):
+    db_order = models.Order(**order.model_dump())
+
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+
+    create_item_from_order_if_missing(db, db_order)
+
+    return db_order
+
+def get_item_by_catalogue_num(db: Session, catalogue_num: str):
+    return (
+        db.query(models.Item)
+        .filter(models.Item.catalogue_num == catalogue_num)
+        .first()
+    )
+
+
+def create_item_from_order_if_missing(db: Session, order: models.Order):
+    if not order.catalog_no:
+        return None
+
+    catalogue_num = str(order.catalog_no).strip()
+
+    if not catalogue_num:
+        return None
+
+    existing_item = get_item_by_catalogue_num(db, catalogue_num)
+
+    if existing_item is not None:
+        return existing_item
+
+    quantity = order.units_ordered or 0
+
+    item = models.Item(
+        catalogue_num=catalogue_num,
+        item_name=order.item_name,
+        lot_num=None,
+        quantity=quantity,
+        storage_id="Imported",
+        expiry_date=order.expected_delivery_date or order.delivery_date,
+        last_restocked=order.delivery_date or order.order_date or date.today(),
+        brand=order.vendor or "—",
+        reorder_threshold=5,
+        critical_threshold=1,
+        category=order.category or "Uncategorized",
+        shelf_num=None,
+        tags="imported,order",
+    )
+
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+
+    return item

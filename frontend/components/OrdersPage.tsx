@@ -1,120 +1,106 @@
-import { emojiFor, type Order } from "@/types/inventory";
+"use client";
+
+import { useMemo, useRef, useState } from "react";
+import type { OrderRecord } from "@/types/inventory";
 
 type OrdersPageProps = {
-  orders: Order[];
-  history: Order[];
-  onLogOrder: () => void;
+  orders: OrderRecord[];
+  loading: boolean;
+  onRefresh: () => void;
+  onImportExcel: (file: File) => Promise<void>;
+  onExportAll: () => Promise<void>;
+  onExportSelected: (ids: number[]) => Promise<void>;
 };
 
-function OrderTable({
-  title,
-  subtitle,
-  orders,
-}: {
-  title: string;
-  subtitle: string;
-  orders: Order[];
-}) {
-  return (
-    <div className="card">
-      <div className="card-head">
-        <div>
-          <h2>{title}</h2>
-          <p className="sub">{subtitle}</p>
-        </div>
-      </div>
+function money(value: number | null) {
+  if (value === null || value === undefined) return "—";
+  return `$${value.toFixed(2)}`;
+}
 
-      <div className="toolbar">
-        <div />
-        <div className="search">
-          <span className="search-icon">⌕</span>
-          <input placeholder="Search" />
-        </div>
-      </div>
-
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Date Ordered ↓</th>
-              <th>Item Name</th>
-              <th>Price</th>
-              <th>Catalog Number</th>
-              <th>Units Ordered</th>
-              <th>Expiry Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id}>
-                <td className="strong-text">{order.dateOrdered}</td>
-
-                <td>
-                  <div className="item-cell">
-                    <div className="thumb">{emojiFor(order.itemName)}</div>
-                    <div>
-                      <div className="nm">{order.itemName}</div>
-                      <div className="sub">{order.supplier}</div>
-                    </div>
-                  </div>
-                </td>
-
-                <td>
-                  <div className="two-line">
-                    <b>${order.totalPrice} USD</b>
-                    <span>${order.pricePerUnit} per unit</span>
-                  </div>
-                </td>
-
-                <td>{order.catalogueNum}</td>
-                <td>{order.unitsOrdered}</td>
-                <td>{order.expiryDate}</td>
-
-                <td>
-                  {order.delivered ? (
-                    <div className="delivered-status">
-                      <span className="toggle-wrap on">
-                        <span className="toggle" />
-                      </span>
-
-                      <div className="two-line">
-                        <b>Delivered</b>
-                        <span>{order.dateDelivered}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="delivered-status">
-                      <span className="toggle-wrap">
-                        <span className="toggle" />
-                      </span>
-                      <span>Not Delivered</span>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-
-            {orders.length === 0 && (
-              <tr>
-                <td colSpan={7} className="empty-row">
-                  No orders found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+function text(value: string | number | null) {
+  return value === null || value === undefined || value === "" ? "—" : value;
 }
 
 export default function OrdersPage({
   orders,
-  history,
-  onLogOrder,
+  loading,
+  onRefresh,
+  onImportExcel,
+  onExportAll,
+  onExportSelected,
 }: OrdersPageProps) {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [search, setSearch] = useState("");
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const visibleOrders = useMemo(() => {
+    const query = search.toLowerCase();
+
+    return orders.filter((order) =>
+      [
+        order.vendor,
+        order.category,
+        order.catalogNo,
+        order.itemName,
+        order.poNumber,
+        order.orderNumber,
+        order.status,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [orders, search]);
+
+  const allVisibleSelected =
+    visibleOrders.length > 0 &&
+    visibleOrders.every((order) => selectedIds.includes(order.id));
+
+  function toggleOrder(id: number) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
+    );
+  }
+
+  function toggleAllVisible() {
+    if (allVisibleSelected) {
+      setSelectedIds((current) =>
+        current.filter((id) => !visibleOrders.some((order) => order.id === id)),
+      );
+      return;
+    }
+
+    setSelectedIds((current) => {
+      const next = new Set(current);
+
+      visibleOrders.forEach((order) => {
+        next.add(order.id);
+      });
+
+      return Array.from(next);
+    });
+  }
+
+  async function handleFileChange(file: File | undefined) {
+    if (!file) return;
+
+    setImporting(true);
+
+    try {
+      await onImportExcel(file);
+      setSelectedIds([]);
+    } finally {
+      setImporting(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
   return (
     <section className="view active">
       <p className="section-tag">ORDERS</p>
@@ -122,29 +108,153 @@ export default function OrdersPage({
       <div className="card">
         <div className="card-head">
           <div>
-            <h2>Pending Orders</h2>
+            <h2>Orders</h2>
             <p className="sub">
-              Displaying <b>{orders.length} items</b> at 1Cell.AI
+              Displaying <b>{visibleOrders.length} orders</b>
             </p>
           </div>
 
-          <button type="button" className="btn primary" onClick={onLogOrder}>
-            + Log Order
-          </button>
+          <div className="order-actions">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xlsm"
+              hidden
+              onChange={(event) => void handleFileChange(event.target.files?.[0])}
+            />
+
+            <button
+              type="button"
+              className="btn tertiary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+            >
+              {importing ? "Importing..." : "Import Excel"}
+            </button>
+
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={() => void onExportSelected(selectedIds)}
+              disabled={selectedIds.length === 0}
+            >
+              Export Selected
+            </button>
+
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => void onExportAll()}
+            >
+              Export All
+            </button>
+
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={onRefresh}
+              disabled={loading}
+            >
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+        </div>
+
+        <div className="toolbar">
+          <div className="filters">
+            <button type="button" className="chip active">
+              Everything
+            </button>
+          </div>
+
+          <div className="search">
+            <span className="search-icon">⌕</span>
+            <input
+              placeholder="Search orders"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleAllVisible}
+                  />
+                </th>
+                <th>Date</th>
+                <th>Order Placed By</th>
+                <th>PO Number</th>
+                <th>Vendor</th>
+                <th>Category</th>
+                <th>Catalog No.</th>
+                <th>Item Name</th>
+                <th># Units</th>
+                <th>Price / Unit</th>
+                <th>Total Price</th>
+                <th>Final Price</th>
+                <th>Availability</th>
+                <th>Expected Delivery</th>
+                <th>Order #</th>
+                <th>Delivery Date</th>
+                <th>Status</th>
+                <th>Received By</th>
+                <th>Date Paid</th>
+                <th>Amount Paid</th>
+                <th>CC/Invoice?</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {visibleOrders.map((order) => (
+                <tr key={order.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(order.id)}
+                      onChange={() => toggleOrder(order.id)}
+                    />
+                  </td>
+                  <td>{text(order.orderDate)}</td>
+                  <td>{text(order.orderPlacedBy)}</td>
+                  <td>{text(order.poNumber)}</td>
+                  <td>{text(order.vendor)}</td>
+                  <td>{text(order.category)}</td>
+                  <td>{text(order.catalogNo)}</td>
+                  <td className="strong-text">{order.itemName}</td>
+                  <td>{text(order.unitsOrdered)}</td>
+                  <td>{money(order.pricePerUnit)}</td>
+                  <td>{money(order.totalPrice)}</td>
+                  <td>{money(order.finalPrice)}</td>
+                  <td>{text(order.availability)}</td>
+                  <td>{text(order.expectedDeliveryDate)}</td>
+                  <td>{text(order.orderNumber)}</td>
+                  <td>{text(order.deliveryDate)}</td>
+                  <td>{text(order.status)}</td>
+                  <td>{text(order.receivedBy)}</td>
+                  <td>{text(order.datePaid)}</td>
+                  <td>{money(order.amountPaid)}</td>
+                  <td>{text(order.ccInvoice)}</td>
+                </tr>
+              ))}
+
+              {visibleOrders.length === 0 && (
+                <tr>
+                  <td colSpan={21} className="empty-row">
+                    {loading ? "Loading orders..." : "No orders found."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-
-      <OrderTable
-        title="Pending Order List"
-        subtitle="Orders that have not been delivered yet"
-        orders={orders}
-      />
-
-      <OrderTable
-        title="Order History"
-        subtitle={`Displaying ${history.length} delivered orders`}
-        orders={history}
-      />
     </section>
   );
 }

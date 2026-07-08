@@ -1,4 +1,4 @@
-export type View = "dashboard" | "orders" | "add" | "audit";
+export type View = "inventory" | "orders" | "add" | "audit" | "users";
 
 export type Status =
   | "high"
@@ -9,7 +9,7 @@ export type Status =
   | "expiring";
 
 export type InventoryItem = {
-  id: number;
+  id: string;
   no: number;
   itemName: string;
   category: string;
@@ -21,6 +21,8 @@ export type InventoryItem = {
   quantity: number;
   expiryDate: string;
   status: Status;
+  tags: string[];
+  lastUsedAt: string | null;
 };
 
 export type Order = {
@@ -37,6 +39,30 @@ export type Order = {
   dateDelivered?: string;
 };
 
+export type OrderRecord = {
+  id: number;
+  orderDate: string | null;
+  orderPlacedBy: string | null;
+  poNumber: string | null;
+  vendor: string | null;
+  category: string | null;
+  catalogNo: string | null;
+  itemName: string;
+  unitsOrdered: number | null;
+  pricePerUnit: number | null;
+  totalPrice: number | null;
+  finalPrice: number | null;
+  availability: string | null;
+  expectedDeliveryDate: string | null;
+  orderNumber: string | null;
+  deliveryDate: string | null;
+  status: string;
+  receivedBy: string | null;
+  datePaid: string | null;
+  amountPaid: number | null;
+  ccInvoice: string | null;
+};
+
 export type AuditLog = {
   id: number;
   username: string;
@@ -47,6 +73,12 @@ export type AuditLog = {
   oldQuantity: number | null;
   changeAmount: number | null;
   newQuantity: number | null;
+};
+
+export type UserAccount = {
+  id: number;
+  username: string;
+  role: string;
 };
 
 export const STATUS_LABEL: Record<Status, string> = {
@@ -68,149 +100,6 @@ export const ITEM_TYPES = [
   "Pipettes (20 ml)",
   "Face Masks (N95)",
   "Sanitizer Gel (500ml)",
-];
-
-export const INITIAL_INVENTORY: InventoryItem[] = [
-  {
-    id: 1,
-    no: 155,
-    itemName: "Gloves (Small)",
-    category: "Consumables",
-    brand: "Fisher",
-    catalogueNum: "Q32856",
-    lotNum: "321",
-    shelfNum: "A1",
-    storageId: "Freezer 1",
-    quantity: 23,
-    expiryDate: "08-09-2026",
-    status: "high",
-  },
-  {
-    id: 2,
-    no: 154,
-    itemName: "Pipettes (200 ml)",
-    category: "Consumables",
-    brand: "Eppendorf",
-    catalogueNum: "P200",
-    lotNum: "919",
-    shelfNum: "B2",
-    storageId: "Cabinet 2",
-    quantity: 9,
-    expiryDate: "08-09-2026",
-    status: "low",
-  },
-  {
-    id: 3,
-    no: 153,
-    itemName: "Pipettes (20 ml)",
-    category: "Consumables",
-    brand: "Eppendorf",
-    catalogueNum: "P20",
-    lotNum: "733",
-    shelfNum: "B2",
-    storageId: "Cabinet 2",
-    quantity: 0,
-    expiryDate: "08-09-2026",
-    status: "out",
-  },
-  {
-    id: 4,
-    no: 152,
-    itemName: "Gloves (Large)",
-    category: "Consumables",
-    brand: "Fisher",
-    catalogueNum: "GL-L",
-    lotNum: "122",
-    shelfNum: "A2",
-    storageId: "Shelf 4",
-    quantity: 2,
-    expiryDate: "08-09-2026",
-    status: "transit",
-  },
-  {
-    id: 5,
-    no: 151,
-    itemName: "High Sensitivity Screen Tape",
-    category: "Consumables",
-    brand: "Agilent",
-    catalogueNum: "5067-5584",
-    lotNum: "556",
-    shelfNum: "C1",
-    storageId: "Cold Room",
-    quantity: 1,
-    expiryDate: "NA",
-    status: "critical",
-  },
-  {
-    id: 6,
-    no: 150,
-    itemName: "HS2 DNA Reagent Kit",
-    category: "Reagent",
-    brand: "Agilent",
-    catalogueNum: "5067-4627",
-    lotNum: "901",
-    shelfNum: "C3",
-    storageId: "Freezer 2",
-    quantity: 23,
-    expiryDate: "07-09-2026",
-    status: "expiring",
-  },
-];
-
-export const INITIAL_ORDERS: Order[] = [
-  {
-    id: 1,
-    dateOrdered: "07-02-2026",
-    itemName: "Gloves (Small)",
-    supplier: "Fisher Scientific",
-    totalPrice: "2000",
-    pricePerUnit: "100",
-    catalogueNum: "Q32856",
-    unitsOrdered: "12",
-    expiryDate: "08-09-2026",
-    delivered: false,
-  },
-  {
-    id: 2,
-    dateOrdered: "07-02-2026",
-    itemName: "Pipettes (200 ml)",
-    supplier: "Fisher Scientific",
-    totalPrice: "1200",
-    pricePerUnit: "100",
-    catalogueNum: "P200",
-    unitsOrdered: "12",
-    expiryDate: "08-09-2026",
-    delivered: false,
-  },
-];
-
-export const INITIAL_HISTORY: Order[] = [
-  {
-    id: 10,
-    dateOrdered: "07-02-2026",
-    itemName: "Gloves (Small)",
-    supplier: "Fisher Scientific",
-    totalPrice: "2000",
-    pricePerUnit: "100",
-    catalogueNum: "Q32856",
-    unitsOrdered: "12",
-    expiryDate: "08-09-2026",
-    delivered: true,
-    dateDelivered: "07-01-2026",
-  },
-  {
-    id: 11,
-    dateOrdered: "07-15-2026",
-    itemName: "Face Masks (N95)",
-    supplier: "MedSupply Co.",
-    totalPrice: "3500",
-    pricePerUnit: "50",
-    catalogueNum: "F94721",
-    unitsOrdered: "70",
-    expiryDate: "07-30-2026",
-    delivered: true,
-    dateDelivered: "07-01-2026",
-  },
 ];
 
 export function emojiFor(name: string) {

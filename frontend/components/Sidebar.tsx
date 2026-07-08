@@ -2,14 +2,14 @@ import type { View } from "@/types/inventory";
 
 type SidebarProps = {
   view: View;
+  isAdmin: boolean;
   onViewChange: (view: View) => void;
-  onInventoryClick: () => void;
 };
 
 export default function Sidebar({
   view,
+  isAdmin,
   onViewChange,
-  onInventoryClick,
 }: SidebarProps) {
   return (
     <aside className="sidebar">
@@ -29,40 +29,43 @@ export default function Sidebar({
       <nav className="nav">
         <button
           type="button"
-          className={view === "dashboard" ? "active" : ""}
-          onClick={() => onViewChange("dashboard")}
+          className={view === "inventory" ? "active" : ""}
+          onClick={() => onViewChange("inventory")}
         >
-          <span className="nav-icon">▦</span>
-          Dashboard
-        </button>
-
-        <button type="button" onClick={onInventoryClick}>
           <span className="nav-icon">⬡</span>
           Inventory
         </button>
 
-        <button
-          type="button"
-          className={view === "orders" || view === "add" ? "active" : ""}
-          onClick={() => onViewChange("orders")}
-        >
-          <span className="nav-icon">☑</span>
-          Orders
-        </button>
+        {isAdmin && (
+          <>
+            <button
+              type="button"
+              className={view === "orders" || view === "add" ? "active" : ""}
+              onClick={() => onViewChange("orders")}
+            >
+              <span className="nav-icon">☑</span>
+              Orders
+            </button>
 
-        <button
-          type="button"
-          className={view === "audit" ? "active" : ""}
-          onClick={() => onViewChange("audit")}
-        >
-          <span className="nav-icon">≣</span>
-          Audit Log
-        </button>
+            <button
+              type="button"
+              className={view === "users" ? "active" : ""}
+              onClick={() => onViewChange("users")}
+            >
+              <span className="nav-icon">👥</span>
+              Users
+            </button>
 
-        <button type="button" onClick={() => onViewChange("dashboard")}>
-          <span className="nav-icon">⚗</span>
-          Life Sciences
-        </button>
+            <button
+              type="button"
+              className={view === "audit" ? "active" : ""}
+              onClick={() => onViewChange("audit")}
+            >
+              <span className="nav-icon">≣</span>
+              Audit Log
+            </button>
+          </>
+        )}
       </nav>
     </aside>
   );

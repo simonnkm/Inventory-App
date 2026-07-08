@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import AddOrderForm from "@/components/AddOrderForm";
 import AuditLogTable from "@/components/AuditLogTable";
 import InventoryTable from "@/components/InventoryTable";
@@ -8,24 +8,31 @@ import OrdersPage from "@/components/OrdersPage";
 import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
 import Topbar from "@/components/Topbar";
+import UsersPage from "@/components/UsersPage";
 import {
+  createOrderRecord,
   createTransaction,
+  createUser,
   deleteItem,
+  deleteUser,
+  exportOrdersExcel,
   getAuditLogs,
   getCurrentUser,
   getItems,
+  getOrders,
+  getUsers,
+  importOrdersExcel,
   login,
   type CurrentUser,
 } from "@/lib/api";
 import {
-  INITIAL_HISTORY,
-  INITIAL_ORDERS,
   type AuditLog,
   type InventoryItem,
   type Order,
+  type UserAccount,
   type View,
+  type OrderRecord,
 } from "@/types/inventory";
-
 function getInitials(username: string) {
   return username
     .split(/[.\s_-]+/)
@@ -36,14 +43,16 @@ function getInitials(username: string) {
 }
 
 export default function Home() {
-  const [view, setView] = useState<View>("dashboard");
+  const [view, setView] = useState<View>("inventory");
 
   const [token, setToken] = useState("");
   const [user, setUser] = useState<CurrentUser | null>(null);
 
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
-  const [history, setHistory] = useState(INITIAL_HISTORY);
+  
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
   const [loginUsername, setLoginUsername] = useState("");
@@ -56,7 +65,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
 
-  const inventoryAnchorRef = useRef<HTMLParagraphElement | null>(null);
+  const [users, setUsers] = useState<UserAccount[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const isAdmin = user?.role?.toLowerCase() === "admin";
 
@@ -79,6 +89,14 @@ export default function Home() {
 
     setToken(savedToken);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (!isAdmin && view !== "inventory") {
+      setView("inventory");
+    }
+  }, [isAdmin, user, view]);
 
   useEffect(() => {
     if (!token) return;
@@ -117,6 +135,41 @@ export default function Home() {
     }
   }
 
+  async function refreshUsers(activeToken = token) {
+    if (!activeToken || !isAdmin) return;
+
+    setLoadingUsers(true);
+    setError("");
+
+    try {
+      const userList = await getUsers(activeToken);
+      setUsers(userList);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load users");
+    } finally {
+      setLoadingUsers(false);
+    }
+  }
+
+  async function handleDeleteUser(userId: number) {
+    if (!isAdmin) return;
+
+    const confirmed = window.confirm(
+      "Delete this user? This cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
+    setError("");
+
+    try {
+      await deleteUser(token, userId);
+      await refreshUsers();
+      showToast("User deleted");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete user");
+    }
+  }
   async function refreshInventory(activeToken = token) {
     if (!activeToken) return;
 
@@ -174,30 +227,34 @@ export default function Home() {
     setUser(null);
     setInventory([]);
     setAuditLogs([]);
-    setView("dashboard");
+    setView("inventory");
     setError("");
   }
 
   function handleViewChange(nextView: View) {
+    if (!isAdmin && nextView !== "inventory") {
+      setView("inventory");
+      return;
+    }
+
     setView(nextView);
 
     if (nextView === "audit") {
       void refreshAuditLogs();
     }
+
+    if (nextView === "users") {
+      void refreshUsers();
+    }
+
+    if (nextView === "orders") {
+      void refreshOrders();
+}
   }
-
-  function goToInventory() {
-    setView("dashboard");
-
-    window.setTimeout(() => {
-      inventoryAnchorRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 0);
-  }
-
+  
   function goToAddForm() {
+    if(!isAdmin) return;
+
     setView("add");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -239,7 +296,24 @@ export default function Home() {
     }
   }
 
-  async function handleDeleteItem(itemId: number) {
+  async function handleCreateUser(payload: {
+    username: string;
+    password: string;
+    role: "user" | "admin";
+  }) {
+    if (!isAdmin) return;
+
+    setError("");
+
+    try {
+      await createUser(token, payload);
+      await refreshUsers();
+      showToast(`Created ${payload.role} account`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create user");
+    }
+  }
+  async function handleDeleteItem(itemId: string) {
     if (!isAdmin) return;
 
     const confirmed = window.confirm("Delete this item? This cannot be undone.");
@@ -264,20 +338,129 @@ export default function Home() {
       setBusyMessage("");
     }
   }
+  async function refreshOrders(activeToken = token) {
+    if (!activeToken || !isAdmin) return;
+
+    setLoadingOrders(true);
+    setError("");
+
+    try {
+      const orderList = await getOrders(activeToken);
+      setOrders(orderList);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load orders");
+    } finally {
+      setLoadingOrders(false);
+    }
+  }
+
+  async function handleImportOrders(file: File) {
+    setError("");
+
+    try {
+      await importOrdersExcel(token, file);
+      await refreshOrders();
+      await refreshInventory();
+      showToast("Orders imported and inventory updated");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import orders");
+    }
+  }
+
+  async function handleExportAllOrders() {
+    setError("");
+
+    try {
+      await exportOrdersExcel(token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to export orders");
+    }
+  }
+
+  async function handleExportSelectedOrders(ids: number[]) {
+    setError("");
+
+    try {
+      await exportOrdersExcel(token, ids);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to export selected orders");
+    }
+  }
 
   function handleEditItem(item: InventoryItem) {
     showToast(`Edit item modal next: ${item.itemName}`);
   }
+  function toApiDate(value?: string | null) {
+    if (!value) return null;
 
-  function handleSubmitOrder(order: Order) {
-    if (order.delivered) {
-      setHistory((current) => [order, ...current]);
-    } else {
-      setOrders((current) => [order, ...current]);
+    const text = value.trim();
+
+    if (!text) return null;
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      return text;
     }
 
-    showToast("Order logged locally");
-    setView("orders");
+    const match = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+
+    if (!match) return null;
+
+    const month = match[1].padStart(2, "0");
+    const day = match[2].padStart(2, "0");
+    const year = match[3];
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function toNumberOrNull(value?: string | number | null) {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : null;
+    }
+
+    const cleaned = value.replace("$", "").replace(",", "").trim();
+    const number = Number(cleaned);
+
+    return Number.isFinite(number) ? number : null;
+  }
+  async function handleSubmitOrder(order: Order) {
+    setError("");
+
+    try {
+      await createOrderRecord(token, {
+        order_date: toApiDate(order.dateOrdered),
+        order_placed_by: user?.username ?? null,
+        po_number: null,
+        vendor: order.supplier,
+        category: "Uncategorized",
+        catalog_no: order.catalogueNum,
+        item_name: order.itemName,
+        units_ordered: toNumberOrNull(order.unitsOrdered),
+        price_per_unit: toNumberOrNull(order.pricePerUnit),
+        total_price: toNumberOrNull(order.totalPrice),
+        final_price: toNumberOrNull(order.totalPrice),
+        availability: null,
+        expected_delivery_date: toApiDate(order.expiryDate),
+        order_number: null,
+        delivery_date: order.delivered ? toApiDate(order.dateDelivered) : null,
+        status: order.delivered ? "Delivered" : "Ordered",
+        received_by: order.delivered ? user?.username ?? null : null,
+        date_paid: null,
+        amount_paid: null,
+        cc_invoice: null,
+      });
+
+      await refreshOrders();
+      await refreshInventory();
+
+      showToast("Order added and inventory updated");
+      setView("orders");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add order");
+    }
   }
 
   if (restoring) {
@@ -340,8 +523,8 @@ export default function Home() {
     <div className="app">
       <Sidebar
         view={view}
+        isAdmin={isAdmin}
         onViewChange={handleViewChange}
-        onInventoryClick={goToInventory}
       />
 
       <main className="main">
@@ -356,7 +539,7 @@ export default function Home() {
         {busyMessage && <p className="loading-banner">{busyMessage}</p>}
         {loadingInventory && <p className="loading-banner">Loading inventory...</p>}
 
-        {view === "dashboard" && (
+        {view === "inventory" && (
           <section className="view active">
             <div className="stats">
               <StatCard
@@ -388,7 +571,7 @@ export default function Home() {
               />
             </div>
 
-            <p className="section-tag" ref={inventoryAnchorRef}>
+            <p className="section-tag">
               INVENTORY
             </p>
 
@@ -403,22 +586,37 @@ export default function Home() {
           </section>
         )}
 
-        {view === "orders" && (
-          <OrdersPage
-            orders={orders}
-            history={history}
-            onLogOrder={goToAddForm}
+        {isAdmin && view === "users" && (
+          <UsersPage
+            users={users}
+            loading={loadingUsers}
+            onRefresh={() => void refreshUsers()}
+            onCreateUser={handleCreateUser}
+            onDeleteUser={handleDeleteUser}
+            currentUserId={user.id}
           />
         )}
 
-        {view === "add" && (
+        {isAdmin && view === "orders" && (
+          <OrdersPage
+            orders={orders}
+            loading={loadingOrders}
+            onRefresh={() => void refreshOrders()}
+            onImportExcel={handleImportOrders}
+            onExportAll={handleExportAllOrders}
+            onExportSelected={handleExportSelectedOrders}
+          />
+        )}
+
+        {isAdmin && view === "add" && (
           <AddOrderForm
             onBack={() => setView("orders")}
             onSubmitOrder={handleSubmitOrder}
           />
         )}
 
-        {view === "audit" && <AuditLogTable logs={auditLogs} />}
+        {isAdmin && view === "audit" && <AuditLogTable logs={auditLogs} />}
+
       </main>
 
       <div className={toast ? "toast show" : "toast"}>
