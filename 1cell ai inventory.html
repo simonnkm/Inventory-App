@@ -9,77 +9,46 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Brand / primary button (from Figma design system) */
-    --navy:#1A365D;
-    --navy-hover:#2A5288;
-    --navy-press:#021F47;
-    --navy-disabled:#D0E5F5;
-
-    /* Neutrals (Untitled-UI style tokens pulled from the file) */
-    --text:#101828;
-    --label:#344054;
-    --muted:#475467;
-    --placeholder:#667085;
-    --border:#D0D5DD;
-    --border-soft:#EAECF0;
-    --field-disabled-bg:#F2F4F7;
-    --page:#F7F8FA;
-    --card:#FFFFFF;
-    --sidebar-active:#EEF2F6;
-
-    /* Input states */
-    --focus-border:#84CAF5;
-    --focus-ring:#E4F0F9;
-    --error:#F04438;
-    --error-border:#FDA29B;
-
-    /* Accent / links */
-    --link:#2857D0;
-    --toggle-on:#2857D0;
-
-    --radius:8px;
-    --sans:'Inter','Helvetica Neue',Arial,sans-serif;
+    --navy:#1A365D;--navy-hover:#2A5288;--navy-press:#021F47;--navy-disabled:#D0E5F5;
+    --text:#101828;--label:#344054;--muted:#475467;--placeholder:#667085;
+    --border:#D0D5DD;--border-soft:#EAECF0;--field-disabled-bg:#F2F4F7;
+    --page:#F7F8FA;--card:#FFFFFF;--sidebar-active:#EEF2F6;
+    --focus-border:#84CAF5;--focus-ring:#E4F0F9;
+    --error:#F04438;--error-border:#FDA29B;
+    --link:#2857D0;--toggle-on:#2857D0;
+    --radius:8px;--sans:'Inter','Helvetica Neue',Arial,sans-serif;
     --shadow-xs:0 1px 2px rgba(16,24,40,.05);
     --shadow-card:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04);
     --shadow-pop:0 12px 24px -6px rgba(16,24,40,.12),0 4px 8px -4px rgba(16,24,40,.06);
+    --shadow-modal:0 24px 48px -12px rgba(16,24,40,.28);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--page);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
   button{font-family:inherit}
   img{max-width:100%;display:block}
 
-  /* ---------- Layout ---------- */
   .app{display:flex;min-height:100vh}
-  .sidebar{
-    width:216px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border-soft);
-    padding:26px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:26px;
-  }
+  .sidebar{width:216px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border-soft);
+    padding:26px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:26px}
   .brand{display:flex;align-items:center;gap:10px;padding:0 8px}
   .brand .mark{width:34px;height:34px;border-radius:50%;flex-shrink:0;
     background:conic-gradient(from 200deg,#1A365D,#8A2B4A,#C9573A,#1A365D);
-    box-shadow:inset 0 0 0 3px #fff, inset 0 0 0 4px #e6e6e6;}
+    box-shadow:inset 0 0 0 3px #fff, inset 0 0 0 4px #e6e6e6}
   .brand .name{font-weight:800;font-size:19px;letter-spacing:-.02em;line-height:1}
   .brand .name .ai{color:#2857D0}
   .brand .tag{font-size:7.5px;color:var(--muted);letter-spacing:.02em;margin-top:3px}
   .nav-label{font-size:11px;letter-spacing:.08em;color:#98A2B3;font-weight:600;padding:0 8px;margin-bottom:-10px}
   .nav{display:flex;flex-direction:column;gap:2px}
-  .nav a{
-    display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:7px;
-    color:var(--muted);font-size:14.5px;font-weight:500;cursor:pointer;text-decoration:none;
-    transition:background .12s,color .12s;
-  }
+  .nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:7px;color:var(--muted);
+    font-size:14.5px;font-weight:500;cursor:pointer;text-decoration:none;transition:background .12s,color .12s}
   .nav a svg{width:19px;height:19px;flex-shrink:0}
   .nav a:hover{background:#F5F7F9}
   .nav a.active{background:var(--sidebar-active);color:var(--text);font-weight:600}
 
   .main{flex:1;min-width:0;padding:20px 22px 60px}
 
-  /* ---------- Header card ---------- */
-  .welcome{
-    background:var(--card);border:1px solid var(--border-soft);border-radius:12px;
-    padding:22px 26px;display:flex;justify-content:space-between;align-items:center;
-    box-shadow:var(--shadow-card);margin-bottom:26px;
-  }
+  .welcome{background:var(--card);border:1px solid var(--border-soft);border-radius:12px;padding:22px 26px;
+    display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow-card);margin-bottom:26px}
   .welcome h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
   .welcome p{margin:6px 0 0;color:var(--muted);font-size:14.5px}
   .who{display:flex;align-items:center;gap:12px}
@@ -92,7 +61,6 @@
 
   .section-tag{font-size:12px;letter-spacing:.08em;color:#98A2B3;font-weight:600;margin:0 0 12px 2px}
 
-  /* ---------- Stat cards ---------- */
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:34px}
   .stat{background:var(--card);border:1px solid var(--border-soft);border-radius:12px;padding:20px 22px;
     box-shadow:var(--shadow-card);display:flex;justify-content:space-between;align-items:flex-start;min-height:110px}
@@ -100,7 +68,6 @@
   .stat .val{font-size:34px;font-weight:700;margin-top:14px;letter-spacing:-.02em}
   .stat .ic{width:34px;height:34px;flex-shrink:0}
 
-  /* ---------- Card / table ---------- */
   .card{background:var(--card);border:1px solid var(--border-soft);border-radius:12px;box-shadow:var(--shadow-card);margin-bottom:26px}
   .card-head{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 24px 16px}
   .card-head h2{margin:0;font-size:18px;font-weight:700}
@@ -114,7 +81,6 @@
   .chip:hover{background:#F9FAFB}
   .chip.active{background:#F2F8FE;border-color:#D6E6F6;color:var(--link)}
 
-  /* search input */
   .search{position:relative;width:300px;max-width:40vw}
   .search input{width:100%;height:42px;border:1px solid var(--border);border-radius:var(--radius);
     padding:0 14px 0 40px;font-size:14px;color:var(--text);background:#fff;transition:.12s}
@@ -125,42 +91,53 @@
   table{width:100%;border-collapse:collapse}
   thead th{text-align:left;font-size:12.5px;font-weight:600;color:var(--muted);padding:12px 24px;
     border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);background:#FCFCFD;white-space:nowrap}
-  thead th .arrow{opacity:.5;margin-left:4px}
-  tbody td{padding:15px 24px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--muted);vertical-align:middle}
+  th.sortable{cursor:pointer;user-select:none}
+  th.sortable:hover{color:var(--text)}
+  th .sort{margin-left:5px;color:#98A2B3;font-size:12px}
+  th.sortable.on .sort{color:var(--link)}
+  tbody td{padding:14px 24px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--muted);vertical-align:middle}
   tbody tr:last-child td{border-bottom:none}
+  .empty-row td{text-align:center;color:var(--placeholder);padding:34px}
+
   .item-cell{display:flex;align-items:center;gap:12px}
-  .thumb{width:40px;height:40px;border-radius:8px;background:#F2F4F7;display:flex;align-items:center;justify-content:center;
-    font-size:20px;flex-shrink:0;border:1px solid var(--border-soft)}
+  .thumb{width:40px;height:40px;border-radius:8px;flex-shrink:0;border:1px solid var(--border-soft);overflow:hidden;
+    background:#F2F4F7 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='none' stroke='%2398A2B3' stroke-width='1.6'><rect x='2' y='2' width='18' height='18' rx='3'/><circle cx='7.5' cy='7.5' r='1.6'/><path d='M20 14l-5-5L4 20'/></svg>") center/22px no-repeat}
+  .thumb img{width:100%;height:100%;object-fit:cover}
   .item-cell .nm{font-weight:600;color:var(--text);font-size:14px}
   .item-cell .sub{font-size:13px;color:var(--muted)}
   .two-line b{display:block;font-weight:600;color:var(--text)}
   .two-line span{font-size:13px;color:var(--muted)}
 
-  /* qty stepper */
-  .qty{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden;height:40px}
-  .qty button{width:38px;height:100%;border:none;background:#fff;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .qty button:hover{background:#F9FAFB}
-  .qty .n{width:56px;text-align:center;font-size:14px;color:var(--text);border-left:1px solid var(--border);border-right:1px solid var(--border);height:100%;display:flex;align-items:center;justify-content:center}
+  /* qty input (borderless steppers, whole frame is a focusable input) */
+  .qty{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:8px;height:42px;width:170px;
+    background:#fff;transition:border-color .12s,box-shadow .12s;overflow:hidden}
+  .qty:focus-within{border-color:var(--focus-border);box-shadow:0 0 0 4px var(--focus-ring)}
+  .qty button{width:40px;height:100%;border:none;background:transparent;color:var(--muted);font-size:20px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .qty button:hover{color:var(--text)}
+  .qty input{flex:1;min-width:0;height:100%;border:none;outline:none;background:transparent;text-align:center;
+    font-size:15px;color:var(--text);font-family:inherit}
+  .qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
-  /* badges */
-  .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:16px;font-size:12.5px;font-weight:600;white-space:nowrap}
-  .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-  .badge.high{color:#067647;background:#ECFDF3}
-  .badge.low{color:#B54708;background:#FFFAEB}
-  .badge.critical{color:#B93815;background:#FEF6EE}
-  .badge.out{color:#475467;background:#F2F4F7}
-  .badge.transit{color:#175CD3;background:#EFF8FF}
-  .badge.expiring{color:#B42318;background:#FEF3F2}
+  /* status pills (new Status component) */
+  .status{display:inline-flex;align-items:center;padding:2px 9px;border-radius:16px;font-size:12px;font-weight:600;white-space:nowrap}
+  .status.high{background:#ECFDF3;color:#027A48}
+  .status.low{background:#FFF5D8;color:#DAA520}
+  .status.critical{background:#FDF4EC;color:#DC6803}
+  .status.out{background:#F2F2F2;color:#667085}
+  .status.transit{background:#EEF3FC;color:#2857D0}
+  .status.expiring{background:#FDECEC;color:#DC0303}
 
   .icon-btn{background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:#98A2B3}
-  .icon-btn:hover{background:#F5F7F9;color:var(--muted)}
-  .icon-btn.del:hover{color:var(--error)}
+  .icon-btn:hover{background:#F5F7F9}
+  .icon-btn.del{color:#F04438}
+  .icon-btn.del:hover{background:#FEF3F2}
+  .icon-btn.edit:hover{color:var(--muted)}
   .row-actions{display:flex;gap:2px;justify-content:flex-end}
 
-  /* ---------- Buttons ---------- */
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;
-    border-radius:var(--radius);font-size:14.5px;font-weight:600;cursor:pointer;border:1px solid transparent;
-    box-shadow:var(--shadow-xs);transition:background .12s,border-color .12s,color .12s}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:var(--radius);
+    font-size:14.5px;font-weight:600;cursor:pointer;border:1px solid transparent;box-shadow:var(--shadow-xs);
+    transition:background .12s,border-color .12s,color .12s}
   .btn svg{width:18px;height:18px}
   .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
   .btn.primary:hover{background:var(--navy-hover);border-color:var(--navy-hover)}
@@ -168,28 +145,21 @@
   .btn.primary:disabled{background:var(--navy-disabled);border-color:var(--navy-disabled);color:#fff;cursor:not-allowed;box-shadow:none}
   .btn.secondary{background:#F9FAFB;border-color:var(--border);color:var(--label)}
   .btn.secondary:hover{background:#F2F4F7}
-  .btn.tertiary{background:#fff;border-color:var(--border);color:var(--label)}
-  .btn.tertiary:hover{background:#F9FAFB}
 
-  /* tooltip on Price header */
   .info-tip{position:relative;display:inline-flex;cursor:help}
   .info-tip svg{width:14px;height:14px;opacity:.6}
-  .info-tip .tip{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);
-    background:#0C111D;color:#fff;font-size:12px;font-weight:500;padding:8px 11px;border-radius:7px;white-space:nowrap;
-    opacity:0;pointer-events:none;transition:.15s;box-shadow:var(--shadow-pop)}
+  .info-tip .tip{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);background:#0C111D;color:#fff;
+    font-size:12px;font-weight:500;padding:8px 11px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:.15s;box-shadow:var(--shadow-pop)}
   .info-tip .tip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0C111D}
   .info-tip:hover .tip{opacity:1}
 
-  /* ---------- Views ---------- */
   .view{display:none}
   .view.active{display:block}
 
-  /* ---------- Breadcrumb ---------- */
   .crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin:2px 0 20px 2px;font-weight:500}
   .crumb .cur{color:var(--muted)}
   .crumb .root{color:#98A2B3;letter-spacing:.06em;font-size:12.5px;font-weight:600}
 
-  /* ---------- Form ---------- */
   .form-card{background:var(--card);border:1px solid var(--border-soft);border-radius:12px;box-shadow:var(--shadow-card);padding:26px 28px}
   .form-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
   .form-top h2{margin:0;font-size:18px;font-weight:700}
@@ -198,17 +168,15 @@
   .field{display:flex;flex-direction:column;gap:7px}
   .field > label{font-size:14px;font-weight:600;color:var(--label)}
   .req-star{color:var(--error)}
-  .control{
-    display:flex;align-items:center;gap:8px;height:46px;background:#fff;border:1px solid var(--border);
-    border-radius:var(--radius);padding:0 14px;transition:border-color .12s,box-shadow .12s,background .12s;
-  }
+  .sub-hint{font-size:13px;color:var(--muted);margin:0}
+  .control{display:flex;align-items:center;gap:8px;height:46px;background:#fff;border:1px solid var(--border);
+    border-radius:var(--radius);padding:0 14px;transition:border-color .12s,box-shadow .12s,background .12s}
   .control input,.control select{border:none;outline:none;background:transparent;font-size:15px;color:var(--text);width:100%;font-family:inherit}
   .control input::placeholder{color:var(--placeholder)}
   .control .prefix,.control .suffix{color:var(--muted);font-size:15px;flex-shrink:0}
   .control .suffix select{width:auto;color:var(--muted);cursor:pointer}
   .control:focus-within{border-color:var(--focus-border);box-shadow:0 0 0 4px var(--focus-ring)}
 
-  /* Field states */
   .field.error .control{border-color:var(--error-border)}
   .field.error .control:focus-within{box-shadow:0 0 0 4px #FEE4E2}
   .field.error .err-icon{display:flex}
@@ -220,7 +188,6 @@
   .field.disabled input,.field.disabled select{color:var(--placeholder);cursor:not-allowed}
   .field.disabled > label{color:var(--muted)}
 
-  /* combobox */
   .combo{position:relative}
   .combo .control{cursor:text}
   .combo .caret{color:var(--muted);flex-shrink:0;transition:transform .15s}
@@ -232,167 +199,121 @@
   .combo-menu .opt:hover,.combo-menu .opt.hi{background:#F2F8FE;color:var(--link)}
   .combo-menu .empty{padding:12px;font-size:14px;color:var(--placeholder)}
 
-  /* toggle */
   .toggle-wrap{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
   .toggle{width:44px;height:24px;border-radius:12px;background:#EAECF0;position:relative;transition:background .15s;flex-shrink:0}
-  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;
-    box-shadow:var(--shadow-xs);transition:transform .15s}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:var(--shadow-xs);transition:transform .15s}
   .toggle-wrap.on .toggle{background:var(--toggle-on)}
   .toggle-wrap.on .toggle::after{transform:translateX(20px)}
   .toggle-wrap .tlabel{font-size:14.5px;font-weight:500;color:var(--muted)}
 
-  /* file upload */
   .file-row{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;height:46px}
-  .file-row .choose{background:#F9FAFB;border-right:1px solid var(--border);padding:0 16px;display:flex;align-items:center;font-size:14px;color:var(--label);font-weight:500;cursor:pointer;white-space:nowrap}
+  .file-row .choose{background:#F9FAFB;border-right:1px solid var(--border);padding:0 16px;display:flex;align-items:center;
+    font-size:14px;color:var(--label);font-weight:500;cursor:pointer;white-space:nowrap}
   .file-row .choose:hover{background:#F2F4F7}
   .file-row .fname{display:flex;align-items:center;padding:0 14px;font-size:14px;color:var(--placeholder)}
   .file-row.has .fname{color:var(--text)}
+  .field.error .file-row{border-color:var(--error-border)}
 
-  .form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:26px;
-    background:var(--card);border:1px solid var(--border-soft);border-radius:12px;box-shadow:var(--shadow-card);padding:18px 24px}
+  .form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:26px;background:var(--card);
+    border:1px solid var(--border-soft);border-radius:12px;box-shadow:var(--shadow-card);padding:18px 24px}
 
-  /* toast */
+  /* Add Item modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);display:none;align-items:center;justify-content:center;z-index:80;padding:24px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:14px;box-shadow:var(--shadow-modal);width:718px;max-width:100%;overflow:hidden}
+  .modal-body{padding:26px 28px 28px}
+  .modal-body h2{margin:0 0 22px;font-size:22px;font-weight:700}
+  .modal-body h2 span{color:var(--link)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px 26px}
+  .modal-footer{display:flex;justify-content:space-between;align-items:center;padding:18px 28px;border-top:1px solid var(--border-soft)}
+
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0C111D;color:#fff;
-    padding:13px 20px;border-radius:9px;font-size:14px;font-weight:500;box-shadow:var(--shadow-pop);opacity:0;pointer-events:none;transition:.25s;z-index:100;display:flex;align-items:center;gap:9px}
+    padding:13px 20px;border-radius:9px;font-size:14px;font-weight:500;box-shadow:var(--shadow-pop);opacity:0;pointer-events:none;
+    transition:.25s;z-index:100;display:flex;align-items:center;gap:9px}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast svg{width:18px;height:18px;color:#12B76A}
 
   @media (max-width:1180px){.stats{grid-template-columns:repeat(2,1fr)}}
-  @media (max-width:860px){.grid{grid-template-columns:1fr}.sidebar{display:none}}
+  @media (max-width:860px){.grid,.grid2{grid-template-columns:1fr}.sidebar{display:none}}
 </style>
 </head>
 <body>
 <div class="app">
-  <!-- ================= SIDEBAR ================= -->
   <aside class="sidebar">
     <div class="brand">
       <div class="mark"></div>
-      <div>
-        <div class="name">1Cell<span class="ai">.Ai</span></div>
-        <div class="tag">AI-Powered Precision Oncology</div>
-      </div>
+      <div><div class="name">1Cell<span class="ai">.Ai</span></div><div class="tag">AI-Powered Precision Oncology</div></div>
     </div>
     <div class="nav-label">MENU</div>
     <nav class="nav">
-      <a data-nav="dashboard" class="active">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        Dashboard
-      </a>
-      <a data-nav="inventory">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
-        Inventory
-      </a>
-      <a data-nav="orders">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M8 11h8M8 15h5"/></svg>
-        Orders
-      </a>
-      <a data-nav="life">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v6l-5 8a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-8V3"/></svg>
-        Life Sciences
-      </a>
+      <a data-nav="dashboard" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+      <a data-nav="inventory"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>Inventory</a>
+      <a data-nav="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M8 11h8M8 15h5"/></svg>Orders</a>
+      <a data-nav="life"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v6l-5 8a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-8V3"/></svg>Life Sciences</a>
     </nav>
   </aside>
 
-  <!-- ================= MAIN ================= -->
   <main class="main">
-    <!-- Shared header -->
     <div class="welcome">
-      <div>
-        <h1>Welcome back, Sankar</h1>
-        <p>Manage all key aspects of your inventory system here.</p>
-      </div>
+      <div><h1>Welcome back, Sankar</h1><p>Manage all key aspects of your inventory system here.</p></div>
       <div class="who">
         <div class="avatar">SM</div>
-        <div>
-          <div class="nm">Sankar Mohan</div>
-          <div class="em">sankar@gmail.com</div>
-        </div>
-        <button class="logout" title="Log out">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        </button>
+        <div><div class="nm">Sankar Mohan</div><div class="em">sankar@gmail.com</div></div>
+        <button class="logout" title="Log out"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
       </div>
     </div>
 
-    <!-- ============ DASHBOARD VIEW ============ -->
+    <!-- DASHBOARD -->
     <section class="view active" id="view-dashboard">
       <div class="stats">
-        <div class="stat">
-          <div><div class="lbl">Low Stock Items</div><div class="val">20</div></div>
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#F79009" stroke-width="1.7"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>
-        </div>
-        <div class="stat">
-          <div><div class="lbl">Critically Low Stock Items</div><div class="val">20</div></div>
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="1.7"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/><path d="M12 9v4m0 3h.01" stroke="#EA580C"/></svg>
-        </div>
-        <div class="stat">
-          <div><div class="lbl">Out of Stock Items</div><div class="val">3</div></div>
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="1.7"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/><path d="M3 3l18 18" stroke="#98A2B3"/></svg>
-        </div>
-        <div class="stat">
-          <div><div class="lbl">Expiring Items</div><div class="val">1</div></div>
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="12" cy="14" r="3"/><path d="M12 13v1.5l1 1"/></svg>
-        </div>
+        <div class="stat"><div><div class="lbl">Low Stock Items</div><div class="val" id="stat-low">0</div></div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#F79009" stroke-width="1.7"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg></div>
+        <div class="stat"><div><div class="lbl">Critically Low Stock Items</div><div class="val" id="stat-critical">0</div></div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="1.7"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg></div>
+        <div class="stat"><div><div class="lbl">Out of Stock Items</div><div class="val" id="stat-out">0</div></div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="1.7"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/><path d="M3 3l18 18" stroke="#98A2B3"/></svg></div>
+        <div class="stat"><div><div class="lbl">Expiring Items</div><div class="val" id="stat-expiring">0</div></div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="12" cy="14" r="3"/><path d="M12 13v1.5l1 1"/></svg></div>
       </div>
 
       <p class="section-tag" id="inventory-anchor">INVENTORY</p>
       <div class="card">
         <div class="card-head">
-          <div>
-            <h2>Inventory List</h2>
-            <p class="sub">Displaying the <b>155 items</b> at 1Cell.AI</p>
-          </div>
-          <button class="btn primary" data-go="add">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            Add Item
-          </button>
+          <div><h2>Inventory List</h2><p class="sub">Displaying the <b id="inv-count">0 items</b> at 1Cell.AI</p></div>
+          <button class="btn primary" id="add-item-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add Item</button>
         </div>
         <div class="toolbar">
-          <div class="filters">
-            <button class="chip active">Everything</button>
-            <button class="chip">Low</button>
-            <button class="chip">Critical</button>
-            <button class="chip">Out of Stock</button>
-            <button class="chip">Expiring</button>
+          <div class="filters" id="filters">
+            <button class="chip active" data-filter="all">Everything</button>
+            <button class="chip" data-filter="low">Low</button>
+            <button class="chip" data-filter="critical">Critical</button>
+            <button class="chip" data-filter="out">Out of Stock</button>
+            <button class="chip" data-filter="expiring">Expiring</button>
           </div>
-          <div class="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input placeholder="Search">
-          </div>
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Search"></div>
         </div>
         <table>
           <thead><tr>
-            <th>No <span class="arrow">↑</span></th><th>Item Type</th><th>Qty <span class="arrow">↑</span></th>
-            <th>Expiry Date</th><th>Status <span class="arrow">↓</span></th><th></th>
+            <th class="sortable" data-col="no">No <span class="sort"></span></th>
+            <th>Item Type</th>
+            <th class="sortable" data-col="qty">Qty <span class="sort"></span></th>
+            <th>Expiry Date</th>
+            <th class="sortable" data-col="status">Status <span class="sort"></span></th>
+            <th></th>
           </tr></thead>
           <tbody id="inv-body"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- ============ ORDERS VIEW ============ -->
+    <!-- ORDERS -->
     <section class="view" id="view-orders">
       <p class="section-tag">ORDERS</p>
-
       <div class="card">
-        <div class="card-head">
-          <div>
-            <h2>Inventory List</h2>
-            <p class="sub">Displaying the <b id="pending-count">155 items</b> at 1Cell.AI</p>
-          </div>
-        </div>
+        <div class="card-head"><div><h2>Pending Orders</h2><p class="sub">Displaying the <b id="pending-count">0 orders</b> yet to be delivered</p></div></div>
         <div class="toolbar">
-          <button class="btn primary" data-go="add">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            Log Order
-          </button>
-          <div class="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input placeholder="Search">
-          </div>
+          <button class="btn primary" data-go="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Log Order</button>
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Search"></div>
         </div>
         <table>
           <thead><tr>
-            <th>Date Ordered <span class="arrow">↓</span></th><th>Item Name</th>
+            <th>Date Ordered</th><th>Item Name</th>
             <th>Price <span class="info-tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span class="tip">Look at attached invoice for more detailed breakdown</span></span></th>
             <th>Catalog Number</th><th>Units Ordered</th><th>Expiry Date</th><th>Status</th>
           </tr></thead>
@@ -401,157 +322,55 @@
       </div>
 
       <div class="card">
-        <div class="card-head">
-          <div>
-            <h2>Order History</h2>
-            <p class="sub">Displaying the <b>416 orders</b> in the order history</p>
-          </div>
-        </div>
+        <div class="card-head"><div><h2>Order History</h2><p class="sub">Displaying the <b id="history-count">0 orders</b> in the order history</p></div></div>
         <div class="toolbar">
-          <button class="btn primary" data-go="add">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            Log Order
-          </button>
-          <div class="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input placeholder="Search">
-          </div>
+          <button class="btn primary" data-go="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Log Order</button>
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Search"></div>
         </div>
         <table>
-          <thead><tr>
-            <th>Date Ordered <span class="arrow">↓</span></th><th>Item Name</th><th>Price</th>
-            <th>Catalog Number</th><th>Units Ordered</th><th>Expiry Date <span class="arrow">↑</span></th><th>Status</th>
-          </tr></thead>
+          <thead><tr><th>Date Ordered</th><th>Item Name</th><th>Price</th><th>Catalog Number</th><th>Units Ordered</th><th>Expiry Date</th><th>Status</th></tr></thead>
           <tbody id="history-body"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- ============ ADD ITEM VIEW ============ -->
+    <!-- LOG ORDER (form) -->
     <section class="view" id="view-add">
-      <div class="crumb"><span class="root">ORDERS</span> <span>/</span> <span class="cur">Adding Item</span></div>
-
+      <div class="crumb"><span class="root">ORDERS</span> <span>/</span> <span class="cur">Logging Order</span></div>
       <form class="form-card" id="add-form" novalidate>
         <div class="form-top">
           <h2>Order Information</h2>
-          <div class="toggle-wrap" id="deliv-toggle" role="switch" aria-checked="false" tabindex="0">
-            <span class="toggle"></span>
-            <span class="tlabel">Not Delivered</span>
-          </div>
+          <div class="toggle-wrap" id="deliv-toggle" role="switch" aria-checked="false" tabindex="0"><span class="toggle"></span><span class="tlabel">Not Delivered</span></div>
         </div>
-
         <div class="grid">
-          <!-- Item Name -->
-          <div class="field" data-field="itemName">
-            <label>Item Name <span class="req-star">*</span></label>
-            <div class="control"><input placeholder="Fisher Scientific"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="itemName"><label>Item Name <span class="req-star">*</span></label><div class="control"><input placeholder="Reagent"></div><p class="hint">This field is required</p></div>
 
-          <!-- Item Type (combobox) -->
-          <div class="field combo" data-field="itemType">
-            <label>Item Type <span class="req-star">*</span></label>
-            <div class="control">
-              <input placeholder="Search Item Types" autocomplete="off">
-              <svg class="caret" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-            </div>
-            <div class="combo-menu"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field combo" data-field="itemType"><label>Item Type <span class="req-star">*</span></label>
+            <div class="control"><input placeholder="Search Item Types" autocomplete="off"><svg class="caret" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+            <div class="combo-menu"></div><p class="hint">This field is required</p></div>
 
-          <!-- Supplier -->
-          <div class="field" data-field="supplier">
-            <label>Supplier <span class="req-star">*</span></label>
-            <div class="control"><input placeholder="Fisher Scientific"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="supplier"><label>Supplier <span class="req-star">*</span></label><div class="control"><input placeholder="Fisher Scientific"></div><p class="hint">This field is required</p></div>
 
-          <!-- Catalog Number -->
-          <div class="field" data-field="catalog">
-            <label>Catalog Number <span class="req-star">*</span></label>
-            <div class="control">
-              <input placeholder="00-000">
-              <svg class="err-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-            </div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="catalog"><label>Catalog Number <span class="req-star">*</span></label>
+            <div class="control"><input placeholder="00-000"><svg class="err-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></div><p class="hint">This field is required</p></div>
 
-          <!-- Date Order Placed -->
-          <div class="field" data-field="dateOrdered">
-            <label>Date Order Placed <span class="req-star">*</span></label>
-            <div class="control"><input type="text" placeholder="mm/dd/yyyy" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="dateOrdered"><label>Date Order Placed <span class="req-star">*</span></label><div class="control"><input type="text" placeholder="mm/dd/yyyy" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div><p class="hint">This field is required</p></div>
 
-          <!-- Expiry Date -->
-          <div class="field" data-field="expiryDate">
-            <label>Expiry Date <span class="req-star">*</span></label>
-            <div class="control"><input type="text" placeholder="mm/dd/yyyy" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="expiryDate"><label>Expiry Date</label><div class="control"><input type="text" placeholder="mm/dd/yyyy" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div><p class="hint">This field is required</p></div>
 
-          <!-- Units Ordered -->
-          <div class="field" data-field="unitsOrdered">
-            <label>Units Ordered <span class="req-star">*</span></label>
-            <div class="control"><input type="number" min="0" placeholder="00"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="unitsOrdered"><label>Units Ordered <span class="req-star">*</span></label><div class="control"><input type="number" min="0" placeholder="00"></div><p class="hint">This field is required</p></div>
 
-          <!-- Reorder Level -->
-          <div class="field" data-field="reorderLevel">
-            <label>Reorder Level <span class="req-star">*</span></label>
-            <div class="control"><input type="number" min="0" placeholder="00"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="pricePerUnit"><label>Price Per Unit <span class="req-star">*</span></label><div class="control"><span class="prefix">$</span><input type="number" min="0" step="0.01" placeholder="0"><span class="suffix"><select tabindex="-1"><option>USD</option><option>EUR</option><option>GBP</option></select></span></div><p class="hint">This field is required</p></div>
 
-          <!-- Price Per Unit -->
-          <div class="field" data-field="pricePerUnit">
-            <label>Price Per Unit <span class="req-star">*</span></label>
-            <div class="control">
-              <span class="prefix">$</span>
-              <input type="number" min="0" step="0.01" placeholder="0">
-              <span class="suffix"><select tabindex="-1"><option>USD</option><option>EUR</option><option>GBP</option></select></span>
-            </div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="totalPrice"><label>Total Price <span class="req-star">*</span></label><div class="control"><span class="prefix">$</span><input type="number" min="0" step="0.01" placeholder="Number"><span class="suffix"><select tabindex="-1"><option>USD</option><option>EUR</option><option>GBP</option></select></span></div><p class="hint">This field is required</p></div>
 
-          <!-- Total Price -->
-          <div class="field" data-field="totalPrice">
-            <label>Total Price <span class="req-star">*</span></label>
-            <div class="control">
-              <span class="prefix">$</span>
-              <input type="number" min="0" step="0.01" placeholder="Number">
-              <span class="suffix"><select tabindex="-1"><option>USD</option><option>EUR</option><option>GBP</option></select></span>
-            </div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field disabled" data-field="dateDelivered"><label>Date Delivered</label><div class="control"><input type="text" placeholder="mm/dd/yyyy" disabled onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div><p class="hint">This field is required</p></div>
 
-          <!-- Date Delivered (gated) -->
-          <div class="field disabled" data-field="dateDelivered" data-gated="1">
-            <label>Date Delivered</label>
-            <div class="control"><input type="text" placeholder="mm/dd/yyyy" disabled onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field disabled" data-field="datePaid"><label>Date Paid</label><div class="control"><input type="text" placeholder="mm/dd/yyyy" disabled onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div><p class="hint">This field is required</p></div>
 
-          <!-- Date Paid (gated) -->
-          <div class="field disabled" data-field="datePaid" data-gated="1">
-            <label>Date Paid</label>
-            <div class="control"><input type="text" placeholder="mm/dd/yyyy" disabled onfocus="this.type='date'" onblur="if(!this.value)this.type='text'"></div>
-            <p class="hint">This field is required</p>
-          </div>
-
-          <!-- Product Image -->
-          <div class="field" data-field="productImage">
-            <label>Product Image <span class="req-star">*</span></label>
-            <div class="file-row">
-              <label class="choose">Choose File<input type="file" accept="image/*,video/*" hidden></label>
-              <span class="fname">From device</span>
-            </div>
-            <p class="hint">This field is required</p>
-          </div>
+          <div class="field" data-field="productImage"><label>Product Image <span class="req-star">*</span></label><div class="file-row"><label class="choose">Choose File<input type="file" accept="image/*,video/*" hidden></label><span class="fname">From device</span></div><p class="hint">This field is required</p></div>
         </div>
       </form>
-
       <div class="form-footer">
         <button class="btn secondary" data-go="orders">Back</button>
         <button class="btn primary" id="submit-btn" form="add-form" disabled>Submit</button>
@@ -560,203 +379,269 @@
   </main>
 </div>
 
-<div class="toast" id="toast">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
-  <span>Order logged successfully</span>
+<!-- Add Item modal -->
+<div class="modal-overlay" id="additem-overlay">
+  <div class="modal">
+    <form id="additem-form">
+      <div class="modal-body">
+        <h2>Item No. <span id="item-no">156</span></h2>
+        <div class="grid2">
+          <div class="field" data-af="type"><label>Item Type</label><div class="control"><input placeholder="Gloves (Small)" autocomplete="off"></div><p class="sub-hint">Make sure to include size if needed</p></div>
+          <div class="field combo" data-af="category"><label>Category</label><div class="control"><input placeholder="Select category" readonly style="cursor:pointer"><svg class="caret" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div><div class="combo-menu"></div></div>
+          <div class="field" data-af="reorder"><label>Reorder Level</label><div class="control"><input type="number" min="0" placeholder="00"></div></div>
+          <div class="field" data-af="critical"><label>Critical Reorder Level</label><div class="control"><input type="number" min="0" placeholder="00"></div></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn secondary" id="additem-back">Back</button>
+        <button type="submit" class="btn primary" id="additem-submit" disabled>Submit</button>
+      </div>
+    </form>
+  </div>
 </div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg><span id="toast-msg">Done</span></div>
 
 <script>
 (function(){
   "use strict";
+  var TODAY = new Date(2026,6,6); // 2026-07-06, anchors "expiring within a week"
 
-  /* ---------- Data ---------- */
-  var ITEM_TYPES = ["Gloves (Small)","Gloves (Medium)","Gloves (Large)","High Sensitivity Screen Tape",
-    "HS2 DNA Reagent Kit","Pipettes (200 ml)","Pipettes (20 ml)","Face Masks (N95)","Sanitizer Gel (500ml)"];
-
-  var EMOJI = {gloves:"🧤",pipette:"💉",tape:"🎞️",reagent:"🧪",
-    mask:"😷",sanitizer:"🧴",box:"📦"};
-  function emojiFor(name){
-    var n=(name||"").toLowerCase();
-    if(n.indexOf("glove")>-1)return EMOJI.gloves;
-    if(n.indexOf("pipette")>-1)return EMOJI.pipette;
-    if(n.indexOf("tape")>-1)return EMOJI.tape;
-    if(n.indexOf("reagent")>-1||n.indexOf("dna")>-1)return EMOJI.reagent;
-    if(n.indexOf("mask")>-1)return EMOJI.mask;
-    if(n.indexOf("sanitizer")>-1||n.indexOf("gel")>-1)return EMOJI.sanitizer;
-    return EMOJI.box;
-  }
-
+  /* ---------- Seed data ---------- */
+  // img paths: drop matching files in an ./images/ folder (see notes). Falls back to a placeholder box.
   var inventory = [
-    {no:155,type:"Gloves (Small)",cat:"Consumables",qty:23,exp:"08-09-2026",status:"high"},
-    {no:154,type:"Pipettes (200 ml)",cat:"Consumables",qty:9,exp:"08-09-2026",status:"low"},
-    {no:153,type:"Pipettes (20 ml)",cat:"Consumables",qty:0,exp:"08-09-2026",status:"out"},
-    {no:152,type:"Gloves (Large)",cat:"Consumables",qty:2,exp:"08-09-2026",status:"transit"},
-    {no:151,type:"High Sensitivity Screen Tape",cat:"Consumables",qty:1,exp:"NA",status:"critical"},
-    {no:150,type:"HS2 DNA Reagent Kit",cat:"Consumables",qty:23,exp:"07-09-2026",status:"expiring"}
+    {no:155,type:"Gloves (Small)",category:"Consumable",qty:23,reorder:15,critical:8,exp:"2026-08-09",img:"images/gloves-small.jpg"},
+    {no:154,type:"Pipettes (200 ml)",category:"Consumable",qty:9,reorder:10,critical:5,exp:"2026-08-09",img:"images/pipettes-200ml.jpeg"},
+    {no:153,type:"Pipettes (20 ml)",category:"Consumable",qty:0,reorder:10,critical:5,exp:"2026-08-09",img:"images/pipettes-20ml.jpg"},
+    {no:152,type:"Gloves (Large)",category:"Consumable",qty:2,reorder:12,critical:3,exp:"2026-08-09",img:"images/gloves-large.jpg"},
+    {no:151,type:"High Sensitivity Screen Tape",category:"Consumable",qty:1,reorder:5,critical:2,exp:null,img:"images/hs-screen-tape.avif"},
+    {no:150,type:"HS2 DNA Reagent Kit",category:"Consumable",qty:23,reorder:10,critical:5,exp:"2026-07-09",img:"images/hs2-dna-reagent-kit.webp"}
   ];
 
-  // Pending orders shown on the Admin Order List (top table)
-  var orders = [];
-  for(var i=0;i<4;i++) orders.push({
-    dateOrdered:"07-02-2026",item:"Gloves (Small)",supplier:"Fisher Scientific",
-    total:"2000",per:"100",catalog:"Q32856",units:"12",exp:"08-09-2026",delivered:false,dateDelivered:""
-  });
+  var orders = []; // pending (Not Delivered)
+  for(var i=0;i<4;i++) orders.push({dateOrdered:"2026-07-02",item:"Gloves (Small)",supplier:"Fisher Scientific",
+    total:"2000",per:"100",catalog:"Q32856",units:"12",exp:"2026-08-09",delivered:false,dateDelivered:"",img:null});
 
   var history = [
-    {dateOrdered:"07-02-2026",item:"Gloves (Small)",supplier:"Fisher Scientific",total:"2000",per:"100",catalog:"Q32856",units:"12",exp:"08-09-2026",delivered:true,dateDelivered:"07-01-2026"},
-    {dateOrdered:"07-15-2026",item:"Face Masks (N95)",supplier:"MedSupply Co.",total:"3500",per:"50",catalog:"F94721",units:"70",exp:"07-30-2026",delivered:true,dateDelivered:"07-01-2026"},
-    {dateOrdered:"08-01-2026",item:"Sanitizer Gel (500ml)",supplier:"HealthPlus",total:"1500",per:"15",catalog:"S56390",units:"100",exp:"08-15-2026",delivered:true,dateDelivered:"07-01-2026"}
+    {dateOrdered:"2026-07-02",item:"Gloves (Small)",supplier:"Fisher Scientific",total:"2000",per:"100",catalog:"Q32856",units:"12",exp:"2026-08-09",delivered:true,dateDelivered:"2026-07-01",img:null},
+    {dateOrdered:"2026-07-15",item:"Face Masks (N95)",supplier:"MedSupply Co.",total:"3500",per:"50",catalog:"F94721",units:"70",exp:"2026-07-30",delivered:true,dateDelivered:"2026-07-01",img:null},
+    {dateOrdered:"2026-08-01",item:"Sanitizer Gel (500ml)",supplier:"HealthPlus",total:"1500",per:"15",catalog:"S56390",units:"100",exp:"2026-08-15",delivered:true,dateDelivered:"2026-07-01",img:null}
   ];
 
+  var CATEGORIES = ["Consumable","Equipment","Service"];
   var STATUS_LABEL = {high:"High",low:"Low",critical:"Critical",out:"Out of Stock",transit:"In Transit",expiring:"Expiring"};
+  var CRIT_RANK = {out:1,expiring:2,critical:3,low:4,transit:5,high:6}; // most critical first
 
-  /* ---------- Render helpers ---------- */
+  /* ---------- Helpers ---------- */
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function el(html){var d=document.createElement("tbody");d.innerHTML=html;return d.firstElementChild;}
-  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function toISO(v){return v||"";}
+  function displayDate(iso){ if(!iso) return "NA"; var p=iso.split("-"); return p.length===3?(p[1]+"-"+p[2]+"-"+p[0]):iso; } // yyyy-mm-dd -> mm-dd-yyyy
+  function parseISO(iso){ if(!iso) return null; var p=iso.split("-"); return new Date(+p[0],+p[1]-1,+p[2]); }
+  function isExpiring(iso){ var d=parseISO(iso); if(!d) return false; var days=(d-TODAY)/86400000; return days>=0 && days<=7; }
+  function hasPending(type){ return orders.some(function(o){return !o.delivered && o.item===type;}); }
+  function computeStatus(it){
+    if(it.qty===0) return "out";
+    if(isExpiring(it.exp)) return "expiring";
+    if(it.qty<=it.critical) return "critical";
+    if(it.qty<=it.reorder) return "low";
+    if(hasPending(it.type)) return "transit";
+    return "high";
+  }
+  function thumbHTML(img){
+    return '<div class="thumb">'+(img?'<img src="'+esc(img)+'" onerror="this.style.display=\'none\'">':'')+'</div>';
+  }
+  function itemTypes(){ return inventory.map(function(x){return x.type;}); }
+  function findItem(type){ for(var i=0;i<inventory.length;i++) if(inventory[i].type===type) return inventory[i]; return null; }
+  function nextNo(){ var m=0; inventory.forEach(function(x){if(x.no>m)m=x.no;}); return m+1; }
 
+  /* ---------- Filters & sort state ---------- */
+  var activeFilters = {}; // status keys that are on
+  var sortState = {col:"no",dir:"asc"};
+
+  function filteredSortedInventory(){
+    var keys = Object.keys(activeFilters).filter(function(k){return activeFilters[k];});
+    var rows = inventory.map(function(it){return {it:it,st:computeStatus(it)};});
+    if(keys.length) rows = rows.filter(function(r){return keys.indexOf(r.st)>-1;});
+    var dir = sortState.dir==="asc"?1:-1;
+    rows.sort(function(a,b){
+      var av,bv;
+      if(sortState.col==="no"){av=a.it.no;bv=b.it.no;}
+      else if(sortState.col==="qty"){av=a.it.qty;bv=b.it.qty;}
+      else {av=CRIT_RANK[a.st];bv=CRIT_RANK[b.st];}
+      return (av-bv)*dir;
+    });
+    return rows;
+  }
+
+  /* ---------- Render: inventory ---------- */
   function renderInventory(){
-    var b=document.getElementById("inv-body");b.innerHTML="";
-    inventory.forEach(function(r){
-      b.appendChild(el(
-        '<tr><td style="color:var(--text);font-weight:500">'+r.no+'</td>'+
-        '<td><div class="item-cell"><div class="thumb">'+emojiFor(r.type)+'</div>'+
-          '<div><div class="nm">'+esc(r.type)+'</div><div class="sub">'+esc(r.cat)+'</div></div></div></td>'+
-        '<td><span class="qty"><button type="button" data-step="-1">−</button><span class="n">'+r.qty+'</span><button type="button" data-step="1">+</button></span></td>'+
-        '<td>'+esc(r.exp)+'</td>'+
-        '<td><span class="badge '+r.status+'">'+STATUS_LABEL[r.status]+'</span></td>'+
+    var body=document.getElementById("inv-body");body.innerHTML="";
+    var rows=filteredSortedInventory();
+    if(!rows.length){ body.appendChild(el('<tr class="empty-row"><td colspan="6">No items match this filter.</td></tr>')); }
+    rows.forEach(function(r){
+      var it=r.it, st=r.st;
+      body.appendChild(el(
+        '<tr data-no="'+it.no+'">'+
+        '<td style="color:var(--text);font-weight:500">'+it.no+'</td>'+
+        '<td><div class="item-cell">'+thumbHTML(it.img)+'<div><div class="nm">'+esc(it.type)+'</div><div class="sub">'+esc(it.category)+'</div></div></div></td>'+
+        '<td><span class="qty"><button type="button" data-step="-1">−</button><input type="number" class="qn" value="'+it.qty+'"><button type="button" data-step="1">+</button></span></td>'+
+        '<td>'+esc(displayDate(it.exp))+'</td>'+
+        '<td><span class="status '+st+'">'+STATUS_LABEL[st]+'</span></td>'+
         '<td><div class="row-actions">'+
-          '<button class="icon-btn del" title="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>'+
-          '<button class="icon-btn" title="Edit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>'+
+          '<button class="icon-btn del" data-act="del" title="Delete item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>'+
+          '<button class="icon-btn edit" data-act="edit" title="Edit item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>'+
         '</div></td></tr>'
       ));
     });
-    // qty steppers
-    b.querySelectorAll("button[data-step]").forEach(function(btn){
-      btn.addEventListener("click",function(){
-        var n=btn.parentElement.querySelector(".n");
-        var v=Math.max(0,parseInt(n.textContent,10)+parseInt(btn.getAttribute("data-step"),10));
-        n.textContent=v;
-      });
+    document.getElementById("inv-count").textContent = (nextNo()-1)+" items";
+    // stat cards
+    var c={low:0,critical:0,out:0,expiring:0};
+    inventory.forEach(function(it){var s=computeStatus(it);if(c[s]!=null)c[s]++;});
+    document.getElementById("stat-low").textContent=c.low;
+    document.getElementById("stat-critical").textContent=c.critical;
+    document.getElementById("stat-out").textContent=c.out;
+    document.getElementById("stat-expiring").textContent=c.expiring;
+    renderSortIndicators();
+  }
+
+  function renderSortIndicators(){
+    document.querySelectorAll("#view-dashboard th.sortable").forEach(function(th){
+      var on=th.getAttribute("data-col")===sortState.col;
+      th.classList.toggle("on",on);
+      th.querySelector(".sort").textContent = on ? (sortState.dir==="asc"?"↑":"↓") : "↕";
     });
   }
 
-  function priceCell(o){
-    return '<td><div class="two-line"><b>$'+esc(o.total)+' USD</b><span>$'+esc(o.per)+' per unit</span></div></td>';
-  }
-  function itemCell(o){
-    return '<td><div class="item-cell"><div class="thumb">'+emojiFor(o.item)+'</div>'+
-      '<div><div class="nm">'+esc(o.item)+'</div><div class="sub">'+esc(o.supplier)+'</div></div></div></td>';
-  }
-  function statusToggleCell(o){
-    if(o.delivered){
-      return '<td><div class="two-line" style="display:flex;align-items:center;gap:10px">'+
-        '<span class="toggle-wrap on" style="cursor:default"><span class="toggle"></span></span>'+
-        '<div><b>Delivered</b><span>'+esc(o.dateDelivered||"")+'</span></div></div></td>';
-    }
+  /* ---------- Render: orders / history ---------- */
+  function priceCell(o){return '<td><div class="two-line"><b>$'+esc(o.total)+' USD</b><span>$'+esc(o.per)+' per unit</span></div></td>';}
+  function orderItemCell(o){var it=findItem(o.item);var img=o.img||(it&&it.img);return '<td><div class="item-cell">'+thumbHTML(img)+'<div><div class="nm">'+esc(o.item)+'</div><div class="sub">'+esc(o.supplier)+'</div></div></div></td>';}
+  function pendingStatusCell(o,idx){
     return '<td><div style="display:flex;align-items:center;gap:10px">'+
-      '<span class="toggle-wrap" style="cursor:default"><span class="toggle"></span></span>'+
+      '<span class="toggle-wrap deliver-toggle" data-idx="'+idx+'" role="switch" aria-checked="false" tabindex="0" title="Mark delivered"><span class="toggle"></span></span>'+
       '<span style="color:var(--muted)">Not Delivered</span></div></td>';
   }
-
+  function historyStatusCell(o){
+    return '<td><div style="display:flex;align-items:center;gap:10px">'+
+      '<span class="toggle-wrap on" style="cursor:default"><span class="toggle"></span></span>'+
+      '<div class="two-line"><b>Delivered</b><span>'+esc(displayDate(o.dateDelivered))+'</span></div></div></td>';
+  }
   function renderOrders(){
     var b=document.getElementById("orders-body");b.innerHTML="";
-    orders.forEach(function(o){
-      b.appendChild(el('<tr><td style="color:var(--text)">'+esc(o.dateOrdered)+'</td>'+itemCell(o)+priceCell(o)+
-        '<td>'+esc(o.catalog)+'</td><td>'+esc(o.units)+'</td><td>'+esc(o.exp)+'</td>'+statusToggleCell(o)+'</tr>'));
+    if(!orders.length) b.appendChild(el('<tr class="empty-row"><td colspan="7">No pending orders.</td></tr>'));
+    orders.forEach(function(o,idx){
+      b.appendChild(el('<tr><td style="color:var(--text)">'+esc(displayDate(o.dateOrdered))+'</td>'+orderItemCell(o)+priceCell(o)+
+        '<td>'+esc(o.catalog)+'</td><td>'+esc(o.units)+'</td><td>'+esc(displayDate(o.exp))+'</td>'+pendingStatusCell(o,idx)+'</tr>'));
     });
-    document.getElementById("pending-count").textContent = orders.length+" items";
+    document.getElementById("pending-count").textContent = orders.length+" orders";
   }
   function renderHistory(){
     var b=document.getElementById("history-body");b.innerHTML="";
     history.forEach(function(o){
-      b.appendChild(el('<tr><td style="color:var(--text)">'+esc(o.dateOrdered)+'</td>'+itemCell(o)+priceCell(o)+
-        '<td>'+esc(o.catalog)+'</td><td>'+esc(o.units)+'</td><td>'+esc(o.exp)+'</td>'+statusToggleCell(o)+'</tr>'));
+      b.appendChild(el('<tr><td style="color:var(--text)">'+esc(displayDate(o.dateOrdered))+'</td>'+orderItemCell(o)+priceCell(o)+
+        '<td>'+esc(o.catalog)+'</td><td>'+esc(o.units)+'</td><td>'+esc(displayDate(o.exp))+'</td>'+historyStatusCell(o)+'</tr>'));
+    });
+    document.getElementById("history-count").textContent = history.length+" orders";
+  }
+  function renderAll(){renderInventory();renderOrders();renderHistory();}
+
+  /* ---------- Qty input (typeable + steppers) ---------- */
+  document.getElementById("inv-body").addEventListener("click",function(e){
+    var step=e.target.closest("button[data-step]");
+    if(step){
+      var tr=step.closest("tr");var no=+tr.getAttribute("data-no");var it=inventory.find(function(x){return x.no===no;});
+      it.qty=Math.max(0,it.qty+(+step.getAttribute("data-step")));
+      renderInventory();
+    }
+  });
+  document.getElementById("inv-body").addEventListener("change",function(e){
+    var inp=e.target.closest(".qn");if(!inp)return;
+    var tr=inp.closest("tr");var no=+tr.getAttribute("data-no");var it=inventory.find(function(x){return x.no===no;});
+    var v=parseInt(inp.value,10);it.qty=isNaN(v)||v<0?0:v;renderInventory();
+  });
+
+  /* ---------- Sort headers ---------- */
+  document.querySelectorAll("#view-dashboard th.sortable").forEach(function(th){
+    th.addEventListener("click",function(){
+      var col=th.getAttribute("data-col");
+      if(sortState.col===col) sortState.dir = sortState.dir==="asc"?"desc":"asc";
+      else {sortState.col=col;sortState.dir="asc";}
+      renderInventory();
+    });
+  });
+
+  /* ---------- Filters ---------- */
+  document.getElementById("filters").addEventListener("click",function(e){
+    var chip=e.target.closest(".chip");if(!chip)return;
+    var f=chip.getAttribute("data-filter");
+    if(f==="all"){ activeFilters={}; }
+    else {
+      activeFilters[f]=!activeFilters[f];
+      var all=["low","critical","out","expiring"];
+      if(all.every(function(k){return activeFilters[k];})) activeFilters={}; // all four -> Everything
+    }
+    syncFilterChips();renderInventory();
+  });
+  function syncFilterChips(){
+    var any=Object.keys(activeFilters).some(function(k){return activeFilters[k];});
+    document.querySelectorAll("#filters .chip").forEach(function(c){
+      var f=c.getAttribute("data-filter");
+      c.classList.toggle("active", f==="all" ? !any : !!activeFilters[f]);
     });
   }
 
   /* ---------- Navigation ---------- */
   var views={dashboard:"view-dashboard",orders:"view-orders",add:"view-add"};
-  function show(view,opts){
-    opts=opts||{};
+  function show(view,opts){opts=opts||{};
     Object.keys(views).forEach(function(k){document.getElementById(views[k]).classList.toggle("active",k===view);});
-    // nav highlight
     document.querySelectorAll(".nav a").forEach(function(a){a.classList.remove("active");});
-    var navKey = view==="add" ? "orders" : (view==="dashboard"?"dashboard":view);
-    var link=document.querySelector('.nav a[data-nav="'+navKey+'"]');
-    if(link)link.classList.add("active");
+    var navKey=view==="add"?"orders":view;
+    var link=document.querySelector('.nav a[data-nav="'+navKey+'"]');if(link)link.classList.add("active");
     if(!opts.keepScroll) window.scrollTo(0,0);
   }
   function scrollToInventory(){
     show("dashboard",{keepScroll:true});
-    var link=document.querySelector('.nav a[data-nav="inventory"]');
     document.querySelectorAll(".nav a").forEach(function(a){a.classList.remove("active");});
-    if(link)link.classList.add("active");
+    var link=document.querySelector('.nav a[data-nav="inventory"]');if(link)link.classList.add("active");
     document.getElementById("inventory-anchor").scrollIntoView({behavior:"smooth",block:"start"});
   }
-
   document.querySelectorAll(".nav a").forEach(function(a){
-    a.addEventListener("click",function(e){
-      e.preventDefault();
-      var t=a.getAttribute("data-nav");
-      if(t==="dashboard")show("dashboard");
-      else if(t==="inventory")scrollToInventory();
-      else if(t==="orders")show("orders");
-      else if(t==="life")show("dashboard"); // placeholder
-    });
+    a.addEventListener("click",function(e){e.preventDefault();var t=a.getAttribute("data-nav");
+      if(t==="dashboard")show("dashboard");else if(t==="inventory")scrollToInventory();
+      else if(t==="orders")show("orders");else show("dashboard");});
   });
   document.body.addEventListener("click",function(e){
-    var go=e.target.closest("[data-go]");
-    if(go){var t=go.getAttribute("data-go");
-      if(t==="add"){resetForm();show("add");}
-      else show(t);
-    }
+    var go=e.target.closest("[data-go]");if(!go)return;
+    var t=go.getAttribute("data-go");
+    if(t==="add"){openLogOrder();} else show(t);
   });
 
-  /* ---------- Combobox (Item Type) ---------- */
-  var combo=document.querySelector('.combo[data-field="itemType"]');
+  /* ---------- Item Type combobox (Log Order) — sourced from inventory ---------- */
+  var combo=document.querySelector('#add-form .combo[data-field="itemType"]');
   var comboInput=combo.querySelector("input");
   var comboMenu=combo.querySelector(".combo-menu");
   var comboValid=false;
   function renderCombo(filter){
     var f=(filter||"").toLowerCase();
-    var matches=ITEM_TYPES.filter(function(t){return t.toLowerCase().indexOf(f)>-1;});
-    comboMenu.innerHTML = matches.length
-      ? matches.map(function(t){return '<div class="opt">'+esc(t)+'</div>';}).join("")
-      : '<div class="empty">No matching item types</div>';
-    comboMenu.querySelectorAll(".opt").forEach(function(o){
-      o.addEventListener("mousedown",function(ev){
-        ev.preventDefault();
-        comboInput.value=o.textContent;comboValid=true;
-        combo.classList.remove("open");clearError(combo);validate();
-      });
-    });
+    var m=itemTypes().filter(function(t){return t.toLowerCase().indexOf(f)>-1;});
+    comboMenu.innerHTML = m.length ? m.map(function(t){return '<div class="opt">'+esc(t)+'</div>';}).join("") : '<div class="empty">No matching item types</div>';
   }
+  combo.addEventListener("mousedown",function(e){
+    var opt=e.target.closest(".opt");if(!opt)return;e.preventDefault();
+    comboInput.value=opt.textContent;comboValid=true;combo.classList.remove("open");clearError(combo);validate();
+  });
   comboInput.addEventListener("focus",function(){combo.classList.add("open");renderCombo(comboInput.value);});
-  comboInput.addEventListener("input",function(){
-    comboValid = ITEM_TYPES.indexOf(comboInput.value)>-1;
-    combo.classList.add("open");renderCombo(comboInput.value);validate();
-  });
-  comboInput.addEventListener("blur",function(){
-    setTimeout(function(){
-      combo.classList.remove("open");
-      if(!comboValid){ if(comboInput.value)comboInput.value=""; markError(combo); }
-      validate();
-    },120);
-  });
+  comboInput.addEventListener("input",function(){comboValid=itemTypes().indexOf(comboInput.value)>-1;combo.classList.add("open");renderCombo(comboInput.value);validate();});
+  comboInput.addEventListener("blur",function(){setTimeout(function(){combo.classList.remove("open");if(!comboValid){if(comboInput.value)comboInput.value="";markError(combo);}validate();},130);});
 
-  /* ---------- Delivery toggle ---------- */
-  var toggle=document.getElementById("deliv-toggle");
-  var delivered=false;
+  /* ---------- Delivery toggle (Log Order form) ---------- */
+  var toggle=document.getElementById("deliv-toggle"),delivered=false;
   function setToggle(on){
-    delivered=on;
-    toggle.classList.toggle("on",on);
-    toggle.setAttribute("aria-checked",on?"true":"false");
-    toggle.querySelector(".tlabel").textContent = on?"Delivered":"Not Delivered";
+    delivered=on;toggle.classList.toggle("on",on);toggle.setAttribute("aria-checked",on?"true":"false");
+    toggle.querySelector(".tlabel").textContent=on?"Delivered":"Not Delivered";
     ["dateDelivered","datePaid"].forEach(function(name){
-      var field=document.querySelector('.field[data-field="'+name+'"]');
-      var input=field.querySelector("input");
-      field.classList.toggle("disabled",!on);
-      input.disabled=!on;
+      var field=document.querySelector('#add-form .field[data-field="'+name+'"]');var input=field.querySelector("input");
+      field.classList.toggle("disabled",!on);input.disabled=!on;
       if(!on){input.value="";input.type="text";clearError(field);}
     });
     validate();
@@ -765,99 +650,175 @@
   toggle.addEventListener("keydown",function(e){if(e.key===" "||e.key==="Enter"){e.preventDefault();setToggle(!delivered);}});
 
   /* ---------- File input ---------- */
-  var fileField=document.querySelector('.field[data-field="productImage"]');
+  var fileField=document.querySelector('#add-form .field[data-field="productImage"]');
   var fileInput=fileField.querySelector('input[type="file"]');
-  var fileRow=fileField.querySelector(".file-row");
-  var fname=fileField.querySelector(".fname");
+  var fileRow=fileField.querySelector(".file-row");var fname=fileField.querySelector(".fname");
+  var pickedImageURL=null;
   fileInput.addEventListener("change",function(){
-    if(fileInput.files.length){fname.textContent=fileInput.files[0].name;fileRow.classList.add("has");clearError(fileField);}
-    else{fname.textContent="From device";fileRow.classList.remove("has");}
+    if(fileInput.files.length){fname.textContent=fileInput.files[0].name;fileRow.classList.add("has");clearError(fileField);
+      pickedImageURL=URL.createObjectURL(fileInput.files[0]);}
+    else{fname.textContent="From device";fileRow.classList.remove("has");pickedImageURL=null;}
     validate();
   });
 
-  /* ---------- Validation ---------- */
+  /* ---------- Log Order validation ---------- */
   function requiredFields(){
-    var names=["itemName","itemType","supplier","catalog","dateOrdered","expiryDate",
-      "unitsOrdered","reorderLevel","pricePerUnit","totalPrice","productImage"];
+    var names=["itemName","itemType","supplier","catalog","dateOrdered","unitsOrdered","pricePerUnit","totalPrice","productImage"];
     if(delivered)names.push("dateDelivered","datePaid");
-    return names;
+    return names; // expiryDate is optional
   }
   function fieldValue(field){
     var name=field.getAttribute("data-field");
     if(name==="itemType")return comboValid?comboInput.value:"";
     if(name==="productImage")return fileInput.files.length?"x":"";
-    var input=field.querySelector("input");
-    return input?input.value.trim():"";
+    var input=field.querySelector("input");return input?input.value.trim():"";
   }
   function markError(field){field.classList.add("error");}
   function clearError(field){field.classList.remove("error");}
-
   function validate(){
     var ok=true;
-    requiredFields().forEach(function(name){
-      var field=document.querySelector('.field[data-field="'+name+'"]');
-      if(!fieldValue(field))ok=false;
-    });
-    document.getElementById("submit-btn").disabled=!ok;
-    return ok;
+    requiredFields().forEach(function(name){var f=document.querySelector('#add-form .field[data-field="'+name+'"]');if(!fieldValue(f))ok=false;});
+    document.getElementById("submit-btn").disabled=!ok;return ok;
   }
-
-  // per-field blur validation -> destructive state when a touched required field is empty
-  document.querySelectorAll('.field[data-field] input').forEach(function(input){
-    var field=input.closest(".field");
-    var name=field.getAttribute("data-field");
-    if(name==="itemType")return; // handled by combo logic
-    input.addEventListener("input",function(){ if(input.value.trim())clearError(field); validate(); });
+  document.querySelectorAll('#add-form .field[data-field] input').forEach(function(input){
+    var field=input.closest(".field");var name=field.getAttribute("data-field");
+    if(name==="itemType")return;
+    input.addEventListener("input",function(){if(input.value.trim())clearError(field);validate();});
     input.addEventListener("blur",function(){
       if(field.classList.contains("disabled"))return;
-      var req=requiredFields().indexOf(name)>-1;
-      if(req && !fieldValue(field))markError(field); else clearError(field);
+      if(requiredFields().indexOf(name)>-1 && !fieldValue(field))markError(field);else clearError(field);
     });
   });
 
-  /* ---------- Submit ---------- */
+  /* ---------- Log Order open / prefill / submit ---------- */
+  var deliverIdx=null; // when delivering an existing pending order
+  function setField(name,val){var i=document.querySelector('#add-form .field[data-field="'+name+'"] input');if(i){i.value=val||"";}}
+  function openLogOrder(){deliverIdx=null;resetForm();show("add");}
+  function openDeliver(idx){
+    deliverIdx=idx;var o=orders[idx];resetForm();
+    setField("itemName",o.supplier?o.item:o.item);
+    comboInput.value=o.item;comboValid=true;
+    setField("supplier",o.supplier);setField("catalog",o.catalog);
+    setField("dateOrdered",o.dateOrdered);setField("expiryDate",o.exp);
+    setField("unitsOrdered",o.units);setField("pricePerUnit",o.per);setField("totalPrice",o.total);
+    // mark product image satisfied (already logged)
+    if(!fileInput.files.length){fname.textContent="Already on file";fileRow.classList.add("has");}
+    fileSatisfied=true;
+    setToggle(true); // delivered — only dates empty
+    show("add");validate();
+  }
+  var fileSatisfied=false;
+  // override productImage validity when delivering a pre-logged order
+  var origFieldValue=fieldValue;
+  fieldValue=function(field){if(field.getAttribute("data-field")==="productImage"&&fileSatisfied)return "x";return origFieldValue(field);};
+
   var form=document.getElementById("add-form");
   form.addEventListener("submit",function(e){
-    e.preventDefault();
-    if(!validate())return;
-    var get=function(name){var f=document.querySelector('.field[data-field="'+name+'"]');var i=f.querySelector("input");return i?i.value.trim():"";};
-    function fmtDate(v){ if(!v)return ""; var p=v.split("-"); return p.length===3? (p[1]+"-"+p[2]+"-"+p[0]) : v; }
-    var newOrder={
-      dateOrdered:fmtDate(get("dateOrdered")),
-      item:comboInput.value,
-      supplier:get("supplier"),
-      total:get("totalPrice"),
-      per:get("pricePerUnit"),
-      catalog:get("catalog"),
-      units:get("unitsOrdered"),
-      exp:fmtDate(get("expiryDate")),
-      delivered:delivered,
-      dateDelivered:delivered?fmtDate(get("dateDelivered")):""
-    };
-    if(delivered) history.unshift(newOrder); else orders.unshift(newOrder);
-    renderOrders();renderHistory();
-    showToast();
-    show("orders");
+    e.preventDefault();if(!validate())return;
+    var get=function(n){var i=document.querySelector('#add-form .field[data-field="'+n+'"] input');return i?i.value.trim():"";};
+    if(deliverIdx!=null){
+      // delivering an existing pending order
+      var o=orders[deliverIdx];
+      o.delivered=true;o.dateDelivered=toISO(get("dateDelivered"));
+      deliverToInventory(o);
+      history.unshift(o);orders.splice(deliverIdx,1);
+      renderAll();toast("Order marked delivered");show("orders");return;
+    }
+    var newOrder={dateOrdered:toISO(get("dateOrdered")),item:comboInput.value,supplier:get("supplier"),
+      total:get("totalPrice"),per:get("pricePerUnit"),catalog:get("catalog"),units:get("unitsOrdered"),
+      exp:toISO(get("expiryDate")),delivered:delivered,dateDelivered:delivered?toISO(get("dateDelivered")):"",
+      img:pickedImageURL};
+    if(delivered){deliverToInventory(newOrder);history.unshift(newOrder);toast("Order logged & delivered");}
+    else{orders.unshift(newOrder);toast("Order logged successfully");}
+    renderAll();show("orders");
   });
+  function deliverToInventory(o){
+    var it=findItem(o.item);if(!it)return;
+    it.qty += (parseInt(o.units,10)||0);
+    if(o.img && !it._userImg){ it.img=o.img; it._userImg=true; }
+  }
 
-  /* ---------- Reset ---------- */
   function resetForm(){
     form.reset();
-    document.querySelectorAll('.field[data-field]').forEach(function(f){clearError(f);});
+    document.querySelectorAll('#add-form .field[data-field]').forEach(function(f){clearError(f);});
     comboValid=false;comboInput.value="";
-    fname.textContent="From device";fileRow.classList.remove("has");
+    fname.textContent="From device";fileRow.classList.remove("has");pickedImageURL=null;fileSatisfied=false;
     setToggle(false);
     document.querySelectorAll('#add-form input[type="date"]').forEach(function(i){i.type="text";});
     validate();
   }
 
+  /* ---------- Pending order deliver toggle ---------- */
+  document.getElementById("orders-body").addEventListener("click",function(e){
+    var t=e.target.closest(".deliver-toggle");if(!t)return;openDeliver(+t.getAttribute("data-idx"));
+  });
+  document.getElementById("orders-body").addEventListener("keydown",function(e){
+    var t=e.target.closest(".deliver-toggle");if(!t)return;
+    if(e.key===" "||e.key==="Enter"){e.preventDefault();openDeliver(+t.getAttribute("data-idx"));}
+  });
+
+  /* ---------- Add Item modal ---------- */
+  var overlay=document.getElementById("additem-overlay");
+  var aiForm=document.getElementById("additem-form");
+  var aiType=aiForm.querySelector('[data-af="type"] input');
+  var aiCatCombo=aiForm.querySelector('.combo[data-af="category"]');
+  var aiCatInput=aiCatCombo.querySelector("input");
+  var aiCatMenu=aiCatCombo.querySelector(".combo-menu");
+  var aiReorder=aiForm.querySelector('[data-af="reorder"] input');
+  var aiCritical=aiForm.querySelector('[data-af="critical"] input');
+  var editingNo=null;
+
+  aiCatMenu.innerHTML = CATEGORIES.map(function(c){return '<div class="opt">'+c+'</div>';}).join("");
+  aiCatCombo.addEventListener("mousedown",function(e){var o=e.target.closest(".opt");if(!o)return;e.preventDefault();aiCatInput.value=o.textContent;aiCatCombo.classList.remove("open");aiValidate();});
+  aiCatInput.addEventListener("click",function(){aiCatCombo.classList.toggle("open");});
+  document.addEventListener("click",function(e){if(!aiCatCombo.contains(e.target))aiCatCombo.classList.remove("open");});
+  [aiType,aiReorder,aiCritical].forEach(function(i){i.addEventListener("input",aiValidate);});
+  function aiValidate(){document.getElementById("additem-submit").disabled = !(aiType.value.trim() && aiCatInput.value.trim());}
+
+  function openAddItem(no){
+    editingNo = (no!=null)?no:null;
+    var it = no!=null ? findByNo(no) : null;
+    document.getElementById("item-no").textContent = it ? it.no : nextNo();
+    aiType.value = it?it.type:"";
+    aiCatInput.value = it?it.category:"";
+    aiReorder.value = it?it.reorder:"";
+    aiCritical.value = it?it.critical:"";
+    aiValidate();
+    overlay.classList.add("open");
+    setTimeout(function(){aiType.focus();},30);
+  }
+  function findByNo(no){return inventory.find(function(x){return x.no===no;});}
+  function closeAddItem(){overlay.classList.remove("open");aiCatCombo.classList.remove("open");}
+  document.getElementById("add-item-btn").addEventListener("click",function(){openAddItem(null);});
+  document.getElementById("additem-back").addEventListener("click",closeAddItem);
+  overlay.addEventListener("mousedown",function(e){if(e.target===overlay)closeAddItem();});
+  aiForm.addEventListener("submit",function(e){
+    e.preventDefault();
+    var data={type:aiType.value.trim(),category:aiCatInput.value.trim(),reorder:parseInt(aiReorder.value,10)||0,critical:parseInt(aiCritical.value,10)||0};
+    if(editingNo!=null){var it=findByNo(editingNo);it.type=data.type;it.category=data.category;it.reorder=data.reorder;it.critical=data.critical;toast("Item updated");}
+    else{inventory.unshift({no:nextNo(),type:data.type,category:data.category,qty:0,reorder:data.reorder,critical:data.critical,exp:null,img:null});toast("Item added");}
+    closeAddItem();renderAll();
+  });
+
+  /* ---------- Row actions (edit / delete) ---------- */
+  document.getElementById("inv-body").addEventListener("click",function(e){
+    var act=e.target.closest("[data-act]");if(!act)return;
+    var no=+act.closest("tr").getAttribute("data-no");
+    if(act.getAttribute("data-act")==="edit")openAddItem(no);
+    else if(act.getAttribute("data-act")==="del"){
+      var it=findByNo(no);
+      if(confirm('Delete "'+it.type+'" from inventory? This removes the item type entirely.')){
+        inventory=inventory.filter(function(x){return x.no!==no;});renderAll();toast("Item deleted");
+      }
+    }
+  });
+
   /* ---------- Toast ---------- */
   var toastEl=document.getElementById("toast"),toastT;
-  function showToast(){toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show");},2600);}
+  function toast(msg){document.getElementById("toast-msg").textContent=msg||"Done";toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show");},2600);}
 
   /* ---------- Init ---------- */
-  renderInventory();renderOrders();renderHistory();renderCombo("");
-  show("dashboard");
+  syncFilterChips();renderAll();renderCombo("");show("dashboard");
 })();
 </script>
 </body>
