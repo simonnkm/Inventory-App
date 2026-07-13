@@ -74,29 +74,39 @@ async function getErrorMessage(response: Response) {
 
 async function apiRequest<T>(
   path: string,
-  options: RequestInit & { token?: string; json?: unknown } = {},
+  options: {
+    token?: string;
+    method?: string;
+    json?: unknown;
+    body?: BodyInit;
+  } = {},
 ): Promise<T> {
-  const { token, json, headers, ...fetchOptions } = options;
+  const headers: Record<string, string> = {
+    "ngrok-skip-browser-warning": "true",
+  };
+
+  if (options.token) {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+
+  if (options.json !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...fetchOptions,
-    headers: {
-      ...(json ? { "Content-Type": "application/json" } : {}),
-      ...(headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: json ? JSON.stringify(json) : fetchOptions.body,
+    method: options.method ?? "GET",
+    headers,
+    body:
+      options.json !== undefined
+        ? JSON.stringify(options.json)
+        : options.body,
   });
 
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response));
+    throw new Error(`Request failed with status ${response.status}`);
   }
 
-  if (response.status === 204) {
-    return null as T;
-  }
-
-  return response.json() as Promise<T>;
+  return response.json();
 }
 
 function formatDisplayDate(value: string | null) {
@@ -156,9 +166,9 @@ function mapAuditLog(log: BackendAuditLog): AuditLog {
 }
 
 export async function login(username: string, password: string) {
-  const formData = new URLSearchParams();
-  formData.set("username", username);
-  formData.set("password", password);
+  const body = new URLSearchParams();
+  body.append("username", username);
+  body.append("password", password);
 
   const response = await fetch(`${API_BASE_URL}/login`, {
     method: "POST",
@@ -166,14 +176,14 @@ export async function login(username: string, password: string) {
       "Content-Type": "application/x-www-form-urlencoded",
       "ngrok-skip-browser-warning": "true",
     },
-    body: formData,
+    body,
   });
 
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response));
+    throw new Error(`Request failed with status ${response.status}`);
   }
 
-  return response.json() as Promise<TokenResponse>;
+  return response.json();
 }
 
 export function getCurrentUser(token: string) {
@@ -439,6 +449,7 @@ export async function importOrdersExcel(token: string, file: File) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
     },
     body: formData,
   });
@@ -458,6 +469,7 @@ export async function exportOrdersExcel(token: string, ids?: number[]) {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
     },
   });
 
@@ -486,6 +498,7 @@ export async function importOrdersExcelAi(token: string, file: File) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
     },
     body: formData,
   });
@@ -599,6 +612,7 @@ export async function uploadOrderDocument(
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
       },
       body: formData,
     },
@@ -686,6 +700,7 @@ export async function downloadOrderDocument(
     {
       headers: {
         Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
       },
     },
   );
