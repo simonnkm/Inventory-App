@@ -514,6 +514,33 @@ def delete_item(item_id: str, db: Session = Depends(get_db), current_user = Depe
 
     return item
 
+@app.get("/item-types/", response_model=list[schemas.ItemTypeResponse])
+def get_item_types(
+    db: Session = Depends(get_db),
+    current_user=Depends(auth.get_current_user),
+):
+    return crud.get_item_types(db)
+
+
+@app.post("/item-types/", response_model=schemas.ItemTypeResponse)
+def create_item_type(
+    payload: schemas.ItemTypeCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(auth.require_role("admin")),
+):
+    item_type = crud.create_item_type(db, payload)
+
+    return {
+        "id": item_type.id,
+        "name": item_type.name,
+        "category": item_type.category,
+        "brand": item_type.brand,
+        "reorder_threshold": item_type.reorder_threshold,
+        "critical_threshold": item_type.critical_threshold,
+        "notes": item_type.notes,
+        "total_quantity": 0,
+    }
+
 @app.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     user_count = db.query(models.User).count()

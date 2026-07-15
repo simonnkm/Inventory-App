@@ -7,7 +7,18 @@ import models
 import schemas
 
 def create_item(db: Session, item: schemas.ItemCreate):
-    db_item = models.Item(**item.model_dump())
+    data = item.model_dump()
+
+    if not data.get("item_type_id"):
+        item_type = get_or_create_item_type_by_name(
+            db,
+            name=data["item_name"],
+            category=data.get("category"),
+            brand=data.get("brand"),
+        )
+        data["item_type_id"] = item_type.id
+
+    db_item = models.Item(**data)
 
     db.add(db_item)
     try:
@@ -75,6 +86,69 @@ def get_items_filtered(
         )
 
     return query.all()
+
+
+def get_item_types(db: Session):
+    rows = (
+        db.query(
+            models.ItemType,
+            func.coalesce(func.sum(models.Item.quantity), 0).label("total_quantity"),
+        )
+        .outerjoin(models.Item, models.Item.item_type_id == models.ItemType.id)
+        .group_by(models.ItemType.id)
+        .order_by(models.ItemType.name.asc())
+        .all()
+    )
+
+    return [
+        {
+            "id": item_type.id,
+            "name": item_type.name,
+            "category": item_type.category,
+            "brand": item_type.brand,
+            "reorder_threshold": item_type.reorder_threshold,
+            "critical_threshold": item_type.critical_threshold,
+            "notes": item_type.notes,
+            "total_quantity": int(total_quantity or 0),
+        }
+        for item_type, total_quantity in rows
+    ]
+
+def create_item_type(db: Session, payload: schemas.ItemTypeCreate):
+    item_type = models.ItemType(**payload.model_dump())
+    db.add(item_type)
+    db.commit()
+    db.refresh(item_type)
+    return item_type
+
+
+def get_or_create_item_type_by_name(
+    db: Session,
+    name: str,
+    category: str | None = None,
+    brand: str | None = None,
+):
+    cleaned_name = name.strip()
+
+    existing = (
+        db.query(models.ItemType)
+        .filter(func.lower(models.ItemType.name) == cleaned_name.lower())
+        .first()
+    )
+
+    if existing:
+        return existing
+
+    item_type = models.ItemType(
+        name=cleaned_name,
+        category=category,
+        brand=brand,
+    )
+
+    db.add(item_type)
+    db.commit()
+    db.refresh(item_type)
+    return item_type
 
 def delete_item(db: Session, item_id: str):
     db_item = get_item(db, item_id)
