@@ -1,6 +1,7 @@
 "use client";
 
-import {useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import AddItemForm from "@/components/AddItemForm";
 import AddOrderForm from "@/components/AddOrderForm";
 import AuditLogTable from "@/components/AuditLogTable";
@@ -10,12 +11,11 @@ import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
 import Topbar from "@/components/Topbar";
 import UsersPage from "@/components/UsersPage";
+
 import {
   createItem,
   createOrderRecord,
-  createTransaction,
   createUser,
-  deleteItem,
   deleteOrderDocument,
   deleteUser,
   downloadOrderDocument,
@@ -23,6 +23,7 @@ import {
   getAuditLogs,
   getCurrentUser,
   getItems,
+  getItemTypes,
   getOrderDocuments,
   getOrders,
   getUsers,
@@ -32,20 +33,18 @@ import {
   markOrderPaid,
   uploadOrderDocument,
   updateItem,
-  getItemComments,
-  createItemComment,
-  deleteItemComment,
   type CurrentUser,
 } from "@/lib/api";
-import {
-  type AuditLog,
-  type InventoryItem,
-  type Order,
-  type OrderDocumentType,
-  type OrderRecord,
-  type UserAccount,
-  type View,
-  type ItemComment,
+
+import type {
+  AuditLog,
+  InventoryItem,
+  ItemType,
+  Order,
+  OrderDocumentType,
+  OrderRecord,
+  UserAccount,
+  View,
 } from "@/types/inventory";
 
 function getInitials(username: string) {
@@ -111,11 +110,13 @@ function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
 export default function Home() {
   const [view, setView] = useState<View>("inventory");
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [orderSeedItem, setOrderSeedItem] = useState<InventoryItem | null>(null);
 
   const [token, setToken] = useState("");
   const [user, setUser] = useState<CurrentUser | null>(null);
 
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [itemTypes, setItemTypes] = useState<ItemType[]>([]);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [users, setUsers] = useState<UserAccount[]>([]);
@@ -129,27 +130,19 @@ export default function Home() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  const [busyMessage, setBusyMessage] = useState("");
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
 
-  const [orderSeedItem, setOrderSeedItem] = useState<InventoryItem | null>(null);
-
   const isAdmin = user?.role?.toLowerCase() === "admin";
-
-  const [commentItem, setCommentItem] = useState<InventoryItem | null>(null);
-  const [itemComments, setItemComments] = useState<ItemComment[]>([]);
-  const [commentDraft, setCommentDraft] = useState("");
-  const [commentsLoading, setCommentsLoading] = useState(false);
 
   const stats = useMemo(() => {
     return {
-      low: inventory.filter((item) => item.status === "low").length,
-      critical: inventory.filter((item) => item.status === "critical").length,
-      out: inventory.filter((item) => item.status === "out").length,
-      expiring: inventory.filter((item) => item.status === "expiring").length,
+      low: itemTypes.filter((item) => item.status === "low").length,
+      critical: itemTypes.filter((item) => item.status === "critical").length,
+      out: itemTypes.filter((item) => item.status === "out").length,
+      expiring: itemTypes.filter((item) => item.status === "expiring").length,
     };
-  }, [inventory]);
+  }, [itemTypes]);
 
   useEffect(() => {
     async function loadSavedSession() {
@@ -164,19 +157,25 @@ export default function Home() {
       setError("");
 
       try {
-        const [currentUser, items] = await withTimeout(
-          Promise.all([getCurrentUser(savedToken), getItems(savedToken)]),
+        const [currentUser, items, types] = await withTimeout(
+          Promise.all([
+            getCurrentUser(savedToken),
+            getItems(savedToken),
+            getItemTypes(savedToken),
+          ]),
           5000,
         );
 
         setToken(savedToken);
         setUser(currentUser);
         setInventory(items);
+        setItemTypes(types);
       } catch {
         localStorage.removeItem("access_token");
         setToken("");
         setUser(null);
         setInventory([]);
+        setItemTypes([]);
         setError("Session expired or backend is unreachable. Please sign in again.");
       } finally {
         setRestoring(false);
@@ -218,12 +217,12 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function handleEditItem(item: InventoryItem) {
-    if (!isAdmin) return;
+  function handleEditItemType(item: ItemType) {
+    setError(`Item type editing is not connected yet: ${item.name}`);
+  }
 
-    setEditingItem(item);
-    setView("edit-item");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  function handleDeleteItemType(itemId: number) {
+    setError(`Item type deletion is not connected yet: ${itemId}`);
   }
 
   async function refreshInventory(activeToken = token) {
@@ -233,71 +232,17 @@ export default function Home() {
     setError("");
 
     try {
-      const items = await getItems(activeToken);
+      const [items, types] = await Promise.all([
+        getItems(activeToken),
+        getItemTypes(activeToken),
+      ]);
+
       setInventory(items);
+      setItemTypes(types);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load inventory");
     } finally {
       setLoadingInventory(false);
-    }
-  }
-
-  async function openItemComments(item: InventoryItem) {
-    setCommentItem(item);
-    setItemComments([]);
-    setCommentDraft("");
-    setCommentsLoading(true);
-    setError("");
-
-    try {
-      const comments = await getItemComments(token, item.id);
-      setItemComments(comments);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load comments");
-    } finally {
-      setCommentsLoading(false);
-    }
-  }
-
-  function closeItemComments() {
-    setCommentItem(null);
-    setItemComments([]);
-    setCommentDraft("");
-  }
-
-  async function handleCreateItemComment() {
-    if (!commentItem || !commentDraft.trim()) return;
-
-    setError("");
-
-    try {
-      const created = await createItemComment(
-        token,
-        commentItem.id,
-        commentDraft,
-      );
-
-      setItemComments((current) => [created, ...current]);
-      setCommentDraft("");
-      showToast("Comment added");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add comment");
-    }
-  }
-
-  async function handleDeleteItemComment(commentId: number) {
-    if (!window.confirm("Delete this comment?")) return;
-
-    setError("");
-
-    try {
-      await deleteItemComment(token, commentId);
-      setItemComments((current) =>
-        current.filter((comment) => comment.id !== commentId),
-      );
-      showToast("Comment deleted");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete comment");
     }
   }
 
@@ -358,8 +303,12 @@ export default function Home() {
 
       const accessToken = tokenData.access_token;
 
-      const [currentUser, items] = await withTimeout(
-        Promise.all([getCurrentUser(accessToken), getItems(accessToken)]),
+      const [currentUser, items, types] = await withTimeout(
+        Promise.all([
+          getCurrentUser(accessToken),
+          getItems(accessToken),
+          getItemTypes(accessToken),
+        ]),
         5000,
       );
 
@@ -368,6 +317,7 @@ export default function Home() {
       setToken(accessToken);
       setUser(currentUser);
       setInventory(items);
+      setItemTypes(types);
       setLoginPassword("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -383,6 +333,7 @@ export default function Home() {
     setToken("");
     setUser(null);
     setInventory([]);
+    setItemTypes([]);
     setOrders([]);
     setAuditLogs([]);
     setUsers([]);
@@ -441,51 +392,6 @@ export default function Home() {
       setView("inventory");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update item");
-    }
-  }
-
-  async function handleDeleteItem(itemId: string) {
-    if (!isAdmin) return;
-
-    const confirmed = window.confirm("Delete this item? This cannot be undone.");
-
-    if (!confirmed) return;
-
-    setBusyMessage("Deleting item...");
-    setError("");
-
-    try {
-      await deleteItem(token, itemId);
-      await refreshInventory();
-
-      if (view === "audit") {
-        await refreshAuditLogs();
-      }
-
-      showToast("Item deleted");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete item");
-    } finally {
-      setBusyMessage("");
-    }
-  }
-
-  async function handleQuantityChange(item: InventoryItem, nextQuantity: number) {
-    const changeAmount = nextQuantity - item.quantity;
-
-    if (changeAmount === 0) return;
-
-    setError("");
-
-    try {
-      await createTransaction(token, item.id, changeAmount);
-      await refreshInventory();
-
-      if (view === "audit") {
-        await refreshAuditLogs();
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update quantity");
     }
   }
 
@@ -733,12 +639,7 @@ export default function Home() {
 
           {error && <p className="error-message">{error}</p>}
 
-          <button
-            type="button"
-            className="btn primary"
-            disabled={loggingIn}
-            onClick={() => void handleLogin()}
-          >
+          <button type="submit" className="btn primary" disabled={loggingIn}>
             {loggingIn ? "Signing in..." : "Sign in"}
           </button>
         </form>
@@ -759,7 +660,6 @@ export default function Home() {
         />
 
         {error && <p className="error-banner">{error}</p>}
-        {busyMessage && <p className="loading-banner">{busyMessage}</p>}
         {loadingInventory && (
           <p className="loading-banner">Loading inventory...</p>
         )}
@@ -768,28 +668,28 @@ export default function Home() {
           <section className="view active">
             <div className="stats">
               <StatCard
-                label="Low Stock Items"
+                label="Low Stock Item Types"
                 value={stats.low}
                 icon="📦"
                 tone="warning"
               />
 
               <StatCard
-                label="Critically Low Stock Items"
+                label="Critically Low Item Types"
                 value={stats.critical}
                 icon="⚠"
                 tone="critical"
               />
 
               <StatCard
-                label="Out of Stock Items"
+                label="Out of Stock Item Types"
                 value={stats.out}
                 icon="⊘"
                 tone="muted"
               />
 
               <StatCard
-                label="Expiring Items"
+                label="Expiring Item Types"
                 value={stats.expiring}
                 icon="⏱"
                 tone="danger"
@@ -799,13 +699,11 @@ export default function Home() {
             <p className="section-tag">INVENTORY</p>
 
             <InventoryTable
-              items={inventory}
+              items={itemTypes}
               isAdmin={isAdmin}
               onAddItem={goToAddItem}
-              onEditItem={handleEditItem}
-              onDeleteItem={handleDeleteItem}
-              onQuantityChange={handleQuantityChange}
-              onViewComments={openItemComments}
+              onEditItem={handleEditItemType}
+              onDeleteItem={handleDeleteItemType}
             />
           </section>
         )}
@@ -873,74 +771,6 @@ export default function Home() {
             }}
             onSubmitOrder={handleSubmitOrder}
           />
-        )}
-
-        {commentItem && (
-          <div className="modal-backdrop" onClick={closeItemComments}>
-            <div className="modal-card" onClick={(event) => event.stopPropagation()}>
-              <div className="modal-head">
-                <div>
-                  <h2>Item Comments</h2>
-                  <p className="sub">
-                    {commentItem.itemName} · {commentItem.catalogueNum}
-                  </p>
-                </div>
-
-                <button type="button" className="icon-btn" onClick={closeItemComments}>
-                  ✕
-                </button>
-              </div>
-
-              <div className="comment-compose">
-                <textarea
-                  placeholder="Add note, issue, reorder comment, storage note..."
-                  value={commentDraft}
-                  onChange={(event) => setCommentDraft(event.target.value)}
-                />
-
-                <button
-                  type="button"
-                  className="btn primary"
-                  disabled={!commentDraft.trim()}
-                  onClick={() => void handleCreateItemComment()}
-                >
-                  Add Comment
-                </button>
-              </div>
-
-              {commentsLoading && <p className="modal-message">Loading comments...</p>}
-
-              {!commentsLoading && itemComments.length === 0 && (
-                <p className="modal-message">No comments yet.</p>
-              )}
-
-              {!commentsLoading && itemComments.length > 0 && (
-                <div className="comment-list">
-                  {itemComments.map((comment) => (
-                    <div key={comment.id} className="comment-row">
-                      <div>
-                        <strong>{comment.username}</strong>
-                        <p>{comment.comment}</p>
-                        <span>
-                          {new Date(comment.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          className="mini-btn danger"
-                          onClick={() => void handleDeleteItemComment(comment.id)}
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         )}
       </main>
 

@@ -19,7 +19,7 @@ type AddItemFormProps = {
     reorder_threshold?: number;
     critical_threshold?: number;
     category?: string;
-    shelf_num?: number | null;
+    shelf_num?: string | null;
     tags?: string;
   }) => Promise<void>;
 };
@@ -94,7 +94,7 @@ export default function AddItemForm({
         reorder_threshold: Number(form.reorderThreshold || 5),
         critical_threshold: Number(form.criticalThreshold || 1),
         category: form.category.trim() || "Uncategorized",
-        shelf_num: numberOrNull(form.shelfNum),
+        shelf_num: form.shelfNum.trim() || null,
         tags: form.tags.trim(),
       });
     } finally {
