@@ -15,6 +15,18 @@ export type Status =
   | "transit"
   | "expiring";
 
+export type ItemType = {
+  id: number;
+  name: string;
+  category: string | null;
+  brand: string | null;
+  reorderThreshold: number;
+  criticalThreshold: number;
+  notes: string | null;
+  totalQuantity: number;
+  status: Status;
+};
+
 export type InventoryItem = {
   id: string;
   no: number;
