@@ -205,7 +205,7 @@ export default function StockItemsTable({
                   <td>
                     <button
                       type="button"
-                      className="chip"
+                      className={commentCount > 0 ? "comment-chip has-comments" : "comment-chip"}
                       onClick={() => onViewComments(item)}
                     >
                       💬 {commentCount}
