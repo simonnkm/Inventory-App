@@ -33,4 +33,7 @@ python-multipart
 openpyxl
 pytest
 pytest-asyncio
+httpx
+httpx2
+
 
