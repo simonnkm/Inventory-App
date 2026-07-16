@@ -36,11 +36,28 @@ export default function Sidebar({
           Inventory
         </button>
 
+        <button
+          type="button"
+          className={
+            view === "stock-items" ||
+            view === "add-item" ||
+            view === "edit-item"
+              ? "active"
+              : ""
+          }
+          onClick={() => onViewChange("stock-items")}
+        >
+          <span className="nav-icon">📦</span>
+          Stock Items
+        </button>
+
         {isAdmin && (
           <>
             <button
               type="button"
-              className={view === "orders" || view === "add-order" ? "active" : ""}
+              className={
+                view === "orders" || view === "add-order" ? "active" : ""
+              }
               onClick={() => onViewChange("orders")}
             >
               <span className="nav-icon">☑</span>

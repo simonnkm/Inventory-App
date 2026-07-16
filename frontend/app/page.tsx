@@ -11,11 +11,13 @@ import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
 import Topbar from "@/components/Topbar";
 import UsersPage from "@/components/UsersPage";
+import StockItemsTable from "@/components/StockItemsTable";
 
 import {
   createItem,
   createOrderRecord,
   createUser,
+  deleteItem,
   deleteItemType,
   deleteOrderDocument,
   deleteUser,
@@ -190,7 +192,7 @@ export default function Home() {
   useEffect(() => {
     if (!user) return;
 
-    if (!isAdmin && view !== "inventory") {
+    if (!isAdmin && view !== "inventory" && view !== "stock-items") {
       setView("inventory");
     }
   }, [isAdmin, user, view]);
@@ -290,6 +292,39 @@ export default function Home() {
       showToast("Item type deleted");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete item type");
+    }
+  }
+
+  function handleEditStockItem(item: InventoryItem) {
+    if (!isAdmin) return;
+
+    setEditingItem(item);
+    setView("edit-item");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleDeleteStockItem(itemId: string) {
+    if (!isAdmin) return;
+
+    const item = inventory.find((candidate) => candidate.id === itemId);
+
+    const confirmed = window.confirm(
+      item
+        ? `Delete stock item "${item.itemName}" (${item.catalogueNum})? This will not change order history.`
+        : "Delete this stock item? This will not change order history.",
+    );
+
+    if (!confirmed) return;
+
+    setError("");
+
+    try {
+      await deleteItem(token, itemId);
+      await refreshInventory();
+
+      showToast("Stock item deleted");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete stock item");
     }
   }
 
@@ -412,9 +447,8 @@ export default function Home() {
   }
 
   function handleViewChange(nextView: View) {
-    if (!isAdmin && nextView !== "inventory") {
+    if (!isAdmin && view !== "inventory" && view !== "stock-items") {
       setView("inventory");
-      return;
     }
 
     setView(nextView);
@@ -439,8 +473,8 @@ export default function Home() {
       await createItem(token, payload);
       await refreshInventory();
 
-      showToast("Inventory item added");
-      setView("inventory");
+      showToast("Stock item added");
+      setView("stock-items"); 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add item");
     }
@@ -455,9 +489,9 @@ export default function Home() {
       await updateItem(token, editingItem.id, payload);
       await refreshInventory();
 
-      showToast("Inventory item updated");
+      showToast("Stock item updated");
       setEditingItem(null);
-      setView("inventory");
+      setView("stock-items");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update item");
     }
@@ -777,6 +811,21 @@ export default function Home() {
           </section>
         )}
 
+        {view === "stock-items" && (
+          <section className="view active">
+            <p className="section-tag">STOCK ITEMS</p>
+
+            <StockItemsTable
+              items={inventory}
+              itemTypes={itemTypes}
+              isAdmin={isAdmin}
+              onAddItem={goToAddItem}
+              onEditItem={handleEditStockItem}
+              onDeleteItem={handleDeleteStockItem}
+            />
+          </section>
+        )}
+
         {isAdmin && view === "orders" && (
           <OrdersPage
             orders={orders}
@@ -815,7 +864,7 @@ export default function Home() {
             mode="create"
             itemTypes={itemTypes}
             orders={orders}
-            onBack={() => setView("inventory")}
+            onBack={() => setView("stock-items")}
             onSubmitItem={handleCreateItem}
           />
         )}
@@ -828,7 +877,7 @@ export default function Home() {
             orders={orders}
             onBack={() => {
               setEditingItem(null);
-              setView("inventory");
+              setView("stock-items");
             }}
             onSubmitItem={handleUpdateItem}
           />

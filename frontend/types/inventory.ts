@@ -1,5 +1,6 @@
 export type View =
   | "inventory"
+  | "stock-items"
   | "orders"
   | "add-item"
   | "edit-item"
@@ -44,6 +45,7 @@ export type InventoryItem = {
   status: Status;
   tags: string[];
   lastUsedAt: string | null;
+  isArchived?: boolean;
 };
 
 export type ItemComment = {
@@ -52,6 +54,33 @@ export type ItemComment = {
   username: string;
   comment: string;
   createdAt: string;
+};
+
+export type CommentNotification = {
+  itemId: string;
+  itemTypeId: number | null;
+  itemName: string;
+  catalogueNum: string;
+  brand: string | null;
+  unreadCount: number;
+  latestComment: string | null;
+  latestCommentAt: string | null;
+  latestCommentBy: string | null;
+};
+
+export type ItemTypeCommentNotification = {
+  itemTypeId: number;
+  itemTypeName: string;
+  unreadCount: number;
+  latestComment: string | null;
+  latestCommentAt: string | null;
+  latestCommentBy: string | null;
+};
+
+export type CommentNotificationSummary = {
+  totalUnread: number;
+  items: CommentNotification[];
+  itemTypes: ItemTypeCommentNotification[];
 };
 
 export type Order = {
