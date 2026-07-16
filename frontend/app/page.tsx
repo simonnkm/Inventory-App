@@ -9,22 +9,26 @@ import InventoryTable from "@/components/InventoryTable";
 import OrdersPage from "@/components/OrdersPage";
 import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
+import StockItemsTable from "@/components/StockItemsTable";
 import Topbar from "@/components/Topbar";
 import UsersPage from "@/components/UsersPage";
-import StockItemsTable from "@/components/StockItemsTable";
 
 import {
   createItem,
+  createItemComment,
   createOrderRecord,
   createUser,
   deleteItem,
+  deleteItemComment,
   deleteItemType,
   deleteOrderDocument,
   deleteUser,
   downloadOrderDocument,
   exportOrdersExcel,
   getAuditLogs,
+  getCommentNotifications,
   getCurrentUser,
+  getItemComments,
   getItems,
   getItemTypes,
   getOrderDocuments,
@@ -32,6 +36,8 @@ import {
   getUsers,
   importOrdersExcel,
   login,
+  markItemCommentsRead,
+  markItemTypeCommentsRead,
   markOrderDelivered,
   markOrderPaid,
   uploadOrderDocument,
@@ -42,7 +48,9 @@ import {
 
 import type {
   AuditLog,
+  CommentNotificationSummary,
   InventoryItem,
+  ItemComment,
   ItemType,
   Order,
   OrderDocumentType,
@@ -50,6 +58,23 @@ import type {
   UserAccount,
   View,
 } from "@/types/inventory";
+
+type CommentTarget =
+  | {
+      kind: "item";
+      title: string;
+      itemIds: string[];
+    }
+  | {
+      kind: "item-type";
+      title: string;
+      itemIds: string[];
+    };
+
+type CommentRow = ItemComment & {
+  itemName: string;
+  catalogueNum: string;
+};
 
 function getInitials(username: string) {
   return (
@@ -111,6 +136,12 @@ function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
   ]);
 }
 
+const EMPTY_NOTIFICATIONS: CommentNotificationSummary = {
+  totalUnread: 0,
+  items: [],
+  itemTypes: [],
+};
+
 export default function Home() {
   const [view, setView] = useState<View>("inventory");
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -124,6 +155,16 @@ export default function Home() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [users, setUsers] = useState<UserAccount[]>([]);
+
+  const [commentsByItemId, setCommentsByItemId] = useState<
+    Record<string, ItemComment[]>
+  >({});
+  const [commentTarget, setCommentTarget] = useState<CommentTarget | null>(null);
+  const [commentInput, setCommentInput] = useState("");
+  const [showCommentOverview, setShowCommentOverview] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentNotifications, setCommentNotifications] =
+    useState<CommentNotificationSummary>(EMPTY_NOTIFICATIONS);
 
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -147,6 +188,64 @@ export default function Home() {
       expiring: itemTypes.filter((item) => item.status === "expiring").length,
     };
   }, [itemTypes]);
+
+  const commentCountsByItemId = useMemo(() => {
+    return Object.fromEntries(
+      commentNotifications.items.map((item) => [
+        item.itemId,
+        item.unreadCount,
+      ]),
+    );
+  }, [commentNotifications]);
+
+  const commentCountsByItemTypeId = useMemo(() => {
+    return Object.fromEntries(
+      commentNotifications.itemTypes.map((itemType) => [
+        itemType.itemTypeId,
+        itemType.unreadCount,
+      ]),
+    );
+  }, [commentNotifications]);
+
+  const totalCommentCount = commentNotifications.totalUnread;
+
+  const activeCommentRows = useMemo<CommentRow[]>(() => {
+    if (!commentTarget) return [];
+
+    const rows = commentTarget.itemIds.flatMap((itemId) => {
+      const item = inventory.find((candidate) => candidate.id === itemId);
+
+      return (commentsByItemId[itemId] ?? []).map((comment) => ({
+        ...comment,
+        itemName: item?.itemName ?? "Unknown item",
+        catalogueNum: item?.catalogueNum ?? itemId,
+      }));
+    });
+
+    return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [commentTarget, commentsByItemId, inventory]);
+
+  const topCommentItems = useMemo(() => {
+    return inventory
+      .map((item) => ({
+        item,
+        count: commentCountsByItemId[item.id] ?? 0,
+      }))
+      .filter((entry) => entry.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [commentCountsByItemId, inventory]);
+
+  const topCommentItemTypes = useMemo(() => {
+    return itemTypes
+      .map((itemType) => ({
+        itemType,
+        count: commentCountsByItemTypeId[itemType.id] ?? 0,
+      }))
+      .filter((entry) => entry.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [commentCountsByItemTypeId, itemTypes]);
 
   useEffect(() => {
     async function loadSavedSession() {
@@ -174,12 +273,17 @@ export default function Home() {
         setUser(currentUser);
         setInventory(items);
         setItemTypes(types);
+
+        void refreshComments(savedToken, items);
+        void refreshCommentNotifications(savedToken);
       } catch {
         localStorage.removeItem("access_token");
         setToken("");
         setUser(null);
         setInventory([]);
         setItemTypes([]);
+        setCommentsByItemId({});
+        setCommentNotifications(EMPTY_NOTIFICATIONS);
         setError("Session expired or backend is unreachable. Please sign in again.");
       } finally {
         setRestoring(false);
@@ -203,6 +307,46 @@ export default function Home() {
     window.setTimeout(() => {
       setToast("");
     }, 2500);
+  }
+
+  async function refreshCommentNotifications(activeToken = token) {
+    if (!activeToken) return;
+
+    try {
+      const summary = await getCommentNotifications(activeToken);
+      setCommentNotifications(summary);
+    } catch {
+      setCommentNotifications(EMPTY_NOTIFICATIONS);
+    }
+  }
+
+  async function refreshComments(activeToken = token, activeInventory = inventory) {
+    if (!activeToken) return;
+
+    if (activeInventory.length === 0) {
+      setCommentsByItemId({});
+      await refreshCommentNotifications(activeToken);
+      return;
+    }
+
+    setLoadingComments(true);
+
+    try {
+      const pairs = await Promise.all(
+        activeInventory.map(async (item) => {
+          const comments = await getItemComments(activeToken, item.id).catch(
+            () => [],
+          );
+
+          return [item.id, comments] as const;
+        }),
+      );
+
+      setCommentsByItemId(Object.fromEntries(pairs));
+      await refreshCommentNotifications(activeToken);
+    } finally {
+      setLoadingComments(false);
+    }
   }
 
   async function goToAddItem() {
@@ -310,8 +454,8 @@ export default function Home() {
 
     const confirmed = window.confirm(
       item
-        ? `Delete stock item "${item.itemName}" (${item.catalogueNum})? This will not change order history.`
-        : "Delete this stock item? This will not change order history.",
+        ? `Archive stock item "${item.itemName}" (${item.catalogueNum})? This will not change order history.`
+        : "Archive this stock item? This will not change order history.",
     );
 
     if (!confirmed) return;
@@ -322,9 +466,93 @@ export default function Home() {
       await deleteItem(token, itemId);
       await refreshInventory();
 
-      showToast("Stock item deleted");
+      showToast("Stock item archived");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete stock item");
+      setError(err instanceof Error ? err.message : "Failed to archive stock item");
+    }
+  }
+
+  async function handleViewStockItemComments(item: InventoryItem) {
+    setShowCommentOverview(false);
+    setCommentInput("");
+    setCommentTarget({
+      kind: "item",
+      title: `${item.itemName} (${item.catalogueNum})`,
+      itemIds: [item.id],
+    });
+
+    try {
+      await markItemCommentsRead(token, item.id);
+    } catch {
+    } finally {
+      await refreshCommentNotifications();
+    }
+  }
+
+  async function handleViewItemTypeComments(itemType: ItemType) {
+    const linkedItemIds = inventory
+      .filter((item) => item.itemTypeId === itemType.id)
+      .map((item) => item.id);
+
+    setShowCommentOverview(false);
+    setCommentInput("");
+    setCommentTarget({
+      kind: "item-type",
+      title: `${itemType.name} aggregated comments`,
+      itemIds: linkedItemIds,
+    });
+
+    try {
+      await markItemTypeCommentsRead(token, itemType.id);
+    } catch {
+    } finally {
+      await refreshCommentNotifications();
+    }
+  }
+
+  async function handleCreateComment() {
+    if (!commentTarget) return;
+
+    const text = commentInput.trim();
+
+    if (!text) return;
+
+    const targetItemId = commentTarget.itemIds[0];
+
+    if (!targetItemId) {
+      setError("This item type has no linked stock items to attach a comment to.");
+      return;
+    }
+
+    setError("");
+
+    try {
+      await createItemComment(token, targetItemId, text);
+      await refreshComments();
+
+      setCommentInput("");
+      showToast("Comment added");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add comment");
+    }
+  }
+
+  async function handleDeleteComment(commentId: number) {
+    if (!isAdmin) return;
+
+    const confirmed = window.confirm("Delete this comment?");
+
+    if (!confirmed) return;
+
+    setError("");
+
+    try {
+      await deleteItemComment(token, commentId);
+      await refreshComments();
+
+      showToast("Comment deleted");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete comment");
     }
   }
 
@@ -342,6 +570,9 @@ export default function Home() {
 
       setInventory(items);
       setItemTypes(types);
+
+      void refreshComments(activeToken, items);
+      void refreshCommentNotifications(activeToken);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load inventory");
     } finally {
@@ -422,6 +653,9 @@ export default function Home() {
       setInventory(items);
       setItemTypes(types);
       setLoginPassword("");
+
+      void refreshComments(accessToken, items);
+      void refreshCommentNotifications(accessToken);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -440,6 +674,10 @@ export default function Home() {
     setOrders([]);
     setAuditLogs([]);
     setUsers([]);
+    setCommentsByItemId({});
+    setCommentNotifications(EMPTY_NOTIFICATIONS);
+    setCommentTarget(null);
+    setShowCommentOverview(false);
     setEditingItem(null);
     setOrderSeedItem(null);
     setView("inventory");
@@ -447,11 +685,14 @@ export default function Home() {
   }
 
   function handleViewChange(nextView: View) {
-    if (!isAdmin && view !== "inventory" && view !== "stock-items") {
+    if (!isAdmin && nextView !== "inventory" && nextView !== "stock-items") {
       setView("inventory");
+      return;
     }
 
     setView(nextView);
+    setShowCommentOverview(false);
+    setCommentTarget(null);
 
     if (nextView === "audit") {
       void refreshAuditLogs();
@@ -474,7 +715,7 @@ export default function Home() {
       await refreshInventory();
 
       showToast("Stock item added");
-      setView("stock-items"); 
+      setView("stock-items");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add item");
     }
@@ -708,6 +949,7 @@ export default function Home() {
         >
           <div className="brand">
             <div className="mark" />
+
             <div>
               <div className="name">
                 1Cell<span className="ai">.Ai</span>
@@ -759,12 +1001,179 @@ export default function Home() {
           name={user.username}
           email={`${user.role} account`}
           initials={getInitials(user.username)}
+          commentCount={totalCommentCount}
+          onCommentsClick={() => {
+            setCommentTarget(null);
+            setShowCommentOverview((current) => !current);
+          }}
           onLogout={handleLogout}
         />
 
         {error && <p className="error-banner">{error}</p>}
         {loadingInventory && (
           <p className="loading-banner">Loading inventory...</p>
+        )}
+        {loadingComments && (
+          <p className="loading-banner">Loading comments...</p>
+        )}
+
+        {showCommentOverview && (
+          <section className="view active">
+            <div className="card">
+              <div className="card-head">
+                <div>
+                  <h2>Unread Comment Center</h2>
+                  <p className="sub">
+                    {totalCommentCount} unread comments across inventory
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setShowCommentOverview(false)}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="toolbar">
+                <div>
+                  <h3>Item Types</h3>
+                  {topCommentItemTypes.length === 0 && (
+                    <p className="sub">No unread item type comments.</p>
+                  )}
+
+                  {topCommentItemTypes.map(({ itemType, count }) => (
+                    <button
+                      key={itemType.id}
+                      type="button"
+                      className="chip"
+                      onClick={() => void handleViewItemTypeComments(itemType)}
+                    >
+                      {itemType.name} 💬 {count}
+                    </button>
+                  ))}
+                </div>
+
+                <div>
+                  <h3>Stock Items</h3>
+                  {topCommentItems.length === 0 && (
+                    <p className="sub">No unread stock item comments.</p>
+                  )}
+
+                  {topCommentItems.map(({ item, count }) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="chip"
+                      onClick={() => void handleViewStockItemComments(item)}
+                    >
+                      {item.itemName} / {item.catalogueNum} 💬 {count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {commentTarget && (
+          <section className="view active">
+            <div className="card">
+              <div className="card-head">
+                <div>
+                  <h2>{commentTarget.title}</h2>
+                  <p className="sub">
+                    {commentTarget.kind === "item-type"
+                      ? "Aggregated comments from linked stock items"
+                      : "Comments for this stock item"}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    setCommentTarget(null);
+                    setCommentInput("");
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="toolbar">
+                <div className="search" style={{ flex: 1 }}>
+                  <input
+                    placeholder={
+                      commentTarget.kind === "item-type"
+                        ? "Add item type note, attached to first linked stock item"
+                        : "Add comment"
+                    }
+                    value={commentInput}
+                    onChange={(event) => setCommentInput(event.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  className="btn primary"
+                  onClick={() => void handleCreateComment()}
+                >
+                  Add Comment
+                </button>
+              </div>
+
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Comment</th>
+                      <th>By</th>
+                      <th>Date</th>
+                      {isAdmin && <th />}
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {activeCommentRows.map((comment) => (
+                      <tr key={comment.id}>
+                        <td>
+                          <div className="nm">{comment.itemName}</div>
+                          <div className="sub">{comment.catalogueNum}</div>
+                        </td>
+                        <td>{comment.comment}</td>
+                        <td>{comment.username}</td>
+                        <td>{new Date(comment.createdAt).toLocaleString()}</td>
+
+                        {isAdmin && (
+                          <td>
+                            <button
+                              type="button"
+                              className="icon-btn del"
+                              onClick={() => void handleDeleteComment(comment.id)}
+                            >
+                              🗑
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+
+                    {activeCommentRows.length === 0 && (
+                      <tr>
+                        <td colSpan={isAdmin ? 5 : 4} className="empty-row">
+                          No comments yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
         )}
 
         {view === "inventory" && (
@@ -804,9 +1213,11 @@ export default function Home() {
             <InventoryTable
               items={itemTypes}
               isAdmin={isAdmin}
+              commentCountsByItemTypeId={commentCountsByItemTypeId}
               onAddItem={goToAddItem}
               onEditItem={handleEditItemType}
               onDeleteItem={handleDeleteItemType}
+              onViewComments={(item) => void handleViewItemTypeComments(item)}
             />
           </section>
         )}
@@ -819,9 +1230,11 @@ export default function Home() {
               items={inventory}
               itemTypes={itemTypes}
               isAdmin={isAdmin}
+              commentCountsByItemId={commentCountsByItemId}
               onAddItem={goToAddItem}
               onEditItem={handleEditStockItem}
               onDeleteItem={handleDeleteStockItem}
+              onViewComments={(item) => void handleViewStockItemComments(item)}
             />
           </section>
         )}

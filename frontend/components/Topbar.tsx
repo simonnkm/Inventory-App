@@ -3,6 +3,8 @@ type TopbarProps = {
   email: string;
   initials: string;
   onLogout: () => void;
+  commentCount?: number;
+  onCommentsClick?: () => void;
 };
 
 export default function Topbar({
@@ -10,26 +12,40 @@ export default function Topbar({
   email,
   initials,
   onLogout,
+  commentCount = 0,
+  onCommentsClick,
 }: TopbarProps) {
   return (
-    <div className="welcome">
+    <div className="topbar">
       <div>
-        <h1>Welcome back, {name.split(" ")[0]}</h1>
+        <h1>Welcome back, {name}</h1>
         <p>Manage all key aspects of your inventory system here.</p>
       </div>
 
-      <div className="who">
+      <div className="topbar-user">
+        <button
+          type="button"
+          className="icon-btn"
+          title="Comments"
+          onClick={onCommentsClick}
+        >
+          🔔
+          {commentCount > 0 && (
+            <span className="notification-badge">{commentCount}</span>
+          )}
+        </button>
+
         <div className="avatar">{initials}</div>
 
         <div>
-          <div className="nm">{name}</div>
-          <div className="em">{email}</div>
+          <div className="user-name">{name}</div>
+          <div className="user-email">{email}</div>
         </div>
 
         <button
-          className="logout"
-          title="Log out"
           type="button"
+          className="logout-btn"
+          title="Log out"
           onClick={onLogout}
         >
           ↪

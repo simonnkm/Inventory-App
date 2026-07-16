@@ -14,9 +14,11 @@ type StockItemsTableProps = {
   items: InventoryItem[];
   itemTypes: ItemType[];
   isAdmin: boolean;
+  commentCountsByItemId: Record<string, number>;
   onAddItem: () => void;
   onEditItem: (item: InventoryItem) => void;
   onDeleteItem: (itemId: string) => void;
+  onViewComments: (item: InventoryItem) => void;
 };
 
 type FilterValue = Status | "everything";
@@ -38,9 +40,11 @@ export default function StockItemsTable({
   items,
   itemTypes,
   isAdmin,
+  commentCountsByItemId,
   onAddItem,
   onEditItem,
   onDeleteItem,
+  onViewComments,
 }: StockItemsTableProps) {
   const [filter, setFilter] = useState<FilterValue>("everything");
   const [search, setSearch] = useState("");
@@ -158,6 +162,7 @@ export default function StockItemsTable({
               <th>Qty</th>
               <th>Expiry</th>
               <th>Status</th>
+              <th>Comments</th>
               {isAdmin && <th />}
             </tr>
           </thead>
@@ -167,6 +172,8 @@ export default function StockItemsTable({
               const itemType = item.itemTypeId
                 ? itemTypeById.get(item.itemTypeId)
                 : null;
+
+              const commentCount = commentCountsByItemId[item.id] ?? 0;
 
               return (
                 <tr key={item.id}>
@@ -193,6 +200,16 @@ export default function StockItemsTable({
 
                   <td>
                     <StatusBadge status={item.status} />
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      className="chip"
+                      onClick={() => onViewComments(item)}
+                    >
+                      💬 {commentCount}
+                    </button>
                   </td>
 
                   {isAdmin && (
@@ -224,7 +241,7 @@ export default function StockItemsTable({
 
             {visibleItems.length === 0 && (
               <tr>
-                <td colSpan={isAdmin ? 12 : 11} className="empty-row">
+                <td colSpan={isAdmin ? 13 : 12} className="empty-row">
                   No stock items found.
                 </td>
               </tr>

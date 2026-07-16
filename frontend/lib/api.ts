@@ -2,6 +2,7 @@ import {
   getStatusFromQuantity,
   type AuditLog,
   type InventoryItem,
+  type CommentNotificationSummary,
   type ItemComment,
   type ItemType,
 } from "@/types/inventory";
@@ -116,6 +117,38 @@ type BackendItemComment = {
   username: string;
   comment: string;
   created_at: string;
+};
+
+type BackendCommentNotification = {
+  item_id: string;
+  item_type_id: number | null;
+  item_name: string;
+  catalogue_num: string;
+  brand: string | null;
+  unread_count: number;
+  latest_comment: string | null;
+  latest_comment_at: string | null;
+  latest_comment_by: string | null;
+};
+
+type BackendItemTypeCommentNotification = {
+  item_type_id: number;
+  item_type_name: string;
+  unread_count: number;
+  latest_comment: string | null;
+  latest_comment_at: string | null;
+  latest_comment_by: string | null;
+};
+
+type BackendCommentNotificationSummary = {
+  total_unread: number;
+  items: BackendCommentNotification[];
+  item_types: BackendItemTypeCommentNotification[];
+};
+
+type MarkCommentsReadResponse = {
+  message: string;
+  marked_read: number;
 };
 
 type BackendOrderDocument = {
@@ -370,6 +403,33 @@ function mapItemComment(comment: BackendItemComment): ItemComment {
     username: comment.username,
     comment: comment.comment,
     createdAt: comment.created_at,
+  };
+}
+
+function mapCommentNotifications(
+  summary: BackendCommentNotificationSummary,
+): CommentNotificationSummary {
+  return {
+    totalUnread: summary.total_unread,
+    items: summary.items.map((item) => ({
+      itemId: item.item_id,
+      itemTypeId: item.item_type_id,
+      itemName: item.item_name,
+      catalogueNum: item.catalogue_num,
+      brand: item.brand,
+      unreadCount: item.unread_count,
+      latestComment: item.latest_comment,
+      latestCommentAt: item.latest_comment_at,
+      latestCommentBy: item.latest_comment_by,
+    })),
+    itemTypes: summary.item_types.map((itemType) => ({
+      itemTypeId: itemType.item_type_id,
+      itemTypeName: itemType.item_type_name,
+      unreadCount: itemType.unread_count,
+      latestComment: itemType.latest_comment,
+      latestCommentAt: itemType.latest_comment_at,
+      latestCommentBy: itemType.latest_comment_by,
+    })),
   };
 }
 
@@ -651,6 +711,35 @@ export function deleteItemComment(token: string, commentId: number) {
     token,
     method: "DELETE",
   });
+}
+
+export async function getCommentNotifications(token: string) {
+  const summary = await apiRequest<BackendCommentNotificationSummary>(
+    "/comments/notifications",
+    { token },
+  );
+
+  return mapCommentNotifications(summary);
+}
+
+export function markItemCommentsRead(token: string, itemId: string) {
+  return apiRequest<MarkCommentsReadResponse>(
+    `/items/${encodeURIComponent(itemId)}/comments/read`,
+    {
+      token,
+      method: "POST",
+    },
+  );
+}
+
+export function markItemTypeCommentsRead(token: string, itemTypeId: number) {
+  return apiRequest<MarkCommentsReadResponse>(
+    `/item-types/${itemTypeId}/comments/read`,
+    {
+      token,
+      method: "POST",
+    },
+  );
 }
 
 export async function uploadOrderDocument(
