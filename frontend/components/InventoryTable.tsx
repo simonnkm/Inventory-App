@@ -151,7 +151,7 @@ export default function InventoryTable({
                       <div className="thumb">{emojiFor(item.name)}</div>
                       <div>
                         <div className="nm">{item.name}</div>
-                        <div className="sub">Item Type #{item.id}</div>
+                        {item.category && <div className="sub">{item.category}</div>}
                       </div>
                     </div>
                   </td>

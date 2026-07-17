@@ -184,7 +184,7 @@ export default function StockItemsTable({
                       <div className="thumb">{emojiFor(item.itemName)}</div>
                       <div>
                         <div className="nm">{item.itemName}</div>
-                        <div className="sub">Raw Item #{item.no}</div>
+                        <div className="sub">{item.catalogueNum}</div>
                       </div>
                     </div>
                   </td>
