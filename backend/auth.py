@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
-
+from database import SessionLocal
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
