@@ -25,11 +25,10 @@ export default function Topbar({
       <div className="topbar-user">
         <button
           type="button"
-          className="icon-btn"
+          className="bell-btn"
           title="Comments"
           onClick={onCommentsClick}
         >
-          🔔
           {commentCount > 0 && (
             <span className="notification-badge">{commentCount}</span>
           )}

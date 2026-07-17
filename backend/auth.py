@@ -1,23 +1,27 @@
-from datetime import datetime, timedelta, timezone
-from typing import Annotated
 import os
+from datetime import datetime, timedelta, timezone
+
 from dotenv import load_dotenv
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, APIRouter
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from starlette import status
-from models import User
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 
 import crud
-from database import SessionLocal
+import database
 
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = 'HS256'
+
+if not SECRET_KEY:
+    if os.getenv("VERCEL"):
+        raise RuntimeError("SECRET_KEY is missing in Vercel environment variables")
+
+    SECRET_KEY = "local-development-secret-key"
+
+ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/login')

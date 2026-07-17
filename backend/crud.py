@@ -203,7 +203,7 @@ def resolve_order_item_type(db: Session, order_data: dict):
 def delete_item(db: Session, item_id: str):
     db_item = get_item(db, item_id)
 
-    if db_item is None:
+    if db_item is None or getattr(db_item, "is_archived", False):
         return None
 
     db_item.is_archived = True
